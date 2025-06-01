@@ -19,12 +19,12 @@
     &quot;assignee&quot;: &quot;jcastellano9&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/jcastellano9/TrackeAR.git&quot;,
-    &quot;accountId&quot;: &quot;00ec92ef-305a-41ad-8b12-8043dff33edf&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/jcastellano9/trackear-repo.git",
+    "accountId": "00ec92ef-305a-41ad-8b12-8043dff33edf"
   }
-}</component>
+}]]></component>
   <component name="LLMProjectSettings">
     <option name="turned_on" value="false" />
   </component>
@@ -98,6 +98,7 @@
       <workItem from="1748740951973" duration="103000" />
       <workItem from="1748741287327" duration="85000" />
       <workItem from="1748741413742" duration="541000" />
+      <workItem from="1748741962248" duration="12000" />
     </task>
     <servers />
   </component>
