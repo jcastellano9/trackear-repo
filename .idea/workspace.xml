@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5a57cfc4-1995-429b-a991-73bddbccd1fc" name="Changes" comment="" />
+    <list default="true" id="5a57cfc4-1995-429b-a991-73bddbccd1fc" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/src/pages/Profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Profile.tsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -19,12 +21,12 @@
     &quot;assignee&quot;: &quot;jcastellano9&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/jcastellano9/trackear-repo.git",
-    "accountId": "00ec92ef-305a-41ad-8b12-8043dff33edf"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/jcastellano9/trackear-repo.git&quot;,
+    &quot;accountId&quot;: &quot;00ec92ef-305a-41ad-8b12-8043dff33edf&quot;
   }
-}]]></component>
+}</component>
   <component name="LLMProjectSettings">
     <option name="turned_on" value="false" />
   </component>
@@ -99,6 +101,7 @@
       <workItem from="1748741287327" duration="85000" />
       <workItem from="1748741413742" duration="541000" />
       <workItem from="1748741962248" duration="12000" />
+      <workItem from="1748741985528" duration="1313000" />
     </task>
     <servers />
   </component>

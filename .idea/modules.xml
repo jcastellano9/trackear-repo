@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/trackear.iml" filepath="$PROJECT_DIR$/.idea/trackear.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/trackear-repo.iml" filepath="$PROJECT_DIR$/.idea/trackear-repo.iml" />
     </modules>
   </component>
 </project>
