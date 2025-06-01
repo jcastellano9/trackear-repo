@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5a57cfc4-1995-429b-a991-73bddbccd1fc" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/pages/Profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Profile.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/layout/Header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/Header.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,6 +102,7 @@
       <workItem from="1748741413742" duration="541000" />
       <workItem from="1748741962248" duration="12000" />
       <workItem from="1748741985528" duration="1313000" />
+      <workItem from="1748793696231" duration="1171000" />
     </task>
     <servers />
   </component>

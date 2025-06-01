@@ -27,7 +27,7 @@ const Header: React.FC = () => {
   // navItems: rutas, etiquetas e íconos para la navegación
   const navItems = [
     { path: '/', label: 'Inicio', icon: <LayoutDashboard size={20} /> },
-    { path: '/portfolio', label: 'Mi Cartera', icon: <Briefcase size={20} /> },
+    { path: '/portfolio', label: 'Portfolio', icon: <Briefcase size={20} /> },
     { path: '/analysis', label: 'Análisis', icon: <BarChart size={20} /> },
     { path: '/simulator', label: 'Simulador', icon: <Calculator size={20} /> },
     { path: '/profile', label: 'Perfil', icon: <User size={20} /> },
@@ -60,7 +60,7 @@ const Header: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <NavLink to="/" role="heading" aria-level={1}>
-              <h1 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-semibold text-black dark:text-white">
                 TrackeAr
               </h1>
             </NavLink>
@@ -75,7 +75,7 @@ const Header: React.FC = () => {
                 className={({ isActive }) =>
                   `flex items-center px-3 py-2 rounded-md transition-all duration-200 ${
                     isActive 
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-medium' 
+                      ? 'bg-black text-white font-medium' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`
                 }
@@ -93,7 +93,7 @@ const Header: React.FC = () => {
             </button>
             <button
               onClick={handleLogout}
-              className="ml-2 px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center"
+              className="ml-2 px-4 py-2 bg-black text-white hover:bg-gray-900 transition-colors duration-200 flex items-center"
             >
               <LogOut size={16} className="mr-2" />
               Salir
@@ -137,7 +137,7 @@ const Header: React.FC = () => {
                 className={({ isActive }) =>
                   `flex items-center px-3 py-2 rounded-md transition-all duration-200 ${
                     isActive 
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-medium' 
+                      ? 'bg-black text-white font-medium' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`
                 }
@@ -151,7 +151,7 @@ const Header: React.FC = () => {
                 setIsMenuOpen(false);
                 handleLogout();
               }}
-              className="w-full mt-2 px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center justify-center"
+              className="w-full mt-2 px-4 py-2 bg-black text-white hover:bg-gray-900 transition-colors duration-200 flex items-center justify-center"
             >
               <LogOut size={16} className="mr-2" />
               Salir

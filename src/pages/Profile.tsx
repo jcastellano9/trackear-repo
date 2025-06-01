@@ -2,8 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { motion } from 'framer-motion';
-import { User, Mail, Calendar, Shield, Key, LogOut, AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
+// Eliminado motion y lucide-react: sin íconos ni animaciones
 
 // Profile: Componente para gestionar datos de usuario y seguridad
 const Profile: React.FC = () => {
@@ -53,12 +52,6 @@ const Profile: React.FC = () => {
   // passwordStrength: Calcula nivel de fortaleza de la contraseña según criterios
   const passwordStrength = Object.values(passwordValidation).filter(Boolean).length;
 
-  // getPasswordStrengthClass: Devuelve clase de color según nivel de fortaleza
-  const getPasswordStrengthClass = () => {
-    if (passwordStrength <= 2) return 'bg-red-500';
-    if (passwordStrength <= 4) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
 
   // useEffect: Enfoca el campo o botón según si se está cambiando contraseña
   useEffect(() => {
@@ -131,251 +124,212 @@ const Profile: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Encabezado: Título e introducción del perfil de usuario */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Mi Perfil</h1>
-        <p className="text-gray-600 dark:text-gray-300">Gestiona tu información personal y seguridad</p>
-      </motion.div>
+      <div>
+        <h1 className="text-2xl font-bold text-black">Mi Perfil</h1>
+        <p className="text-gray-700">Gestiona tu información personal y seguridad</p>
+      </div>
 
       {/* Contenedor principal: Información de cuenta, foto y acciones rápidas */}
       <div className="space-y-6 lg:space-y-0 lg:flex lg:space-x-6">
         {/* Sección: Información de la Cuenta (correo y fecha de registro) */}
         <div className="lg:w-1/3">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700"
-          >
-            <div className="flex items-center mb-6">
-              <User size={24} className="text-blue-600 mr-3" />
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Información de la Cuenta</h2>
+          <div className="bg-white rounded border border-gray-100 p-6">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-black">Información de la Cuenta</h2>
             </div>
             <div className="space-y-4">
-              <div className="flex items-start">
-                <Mail size={20} className="text-gray-400 mt-1 mr-3" />
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                    Correo electrónico
-                  </label>
-                  <p className="mt-1 text-gray-900 dark:text-gray-100">{user?.email}</p>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">
+                  Correo electrónico
+                </label>
+                <p className="mt-1 text-black">{user?.email}</p>
               </div>
-              <div className="flex items-start">
-                <Calendar size={20} className="text-gray-400 mt-1 mr-3" />
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                    Fecha de registro
-                  </label>
-                  <p className="mt-1 text-gray-900 dark:text-gray-100">
-                    {user?.created_at
-                      ? new Date(user.created_at).toLocaleDateString('es-AR', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })
-                      : 'N/A'
-                    }
-                  </p>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">
+                  Fecha de registro
+                </label>
+                <p className="mt-1 text-black">
+                  {user?.created_at
+                    ? new Date(user.created_at).toLocaleDateString('es-AR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })
+                    : 'N/A'
+                  }
+                </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
         {/* Sección: Foto de perfil generada a partir del email */}
         <div className="lg:w-1/3">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 text-center"
-          >
+          <div className="bg-white rounded border border-gray-100 p-6 text-center">
             <div className="flex flex-col items-center">
               <img
                 src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.email || 'User'}`}
                 alt="Foto de perfil"
-                className="w-24 h-24 rounded-full border-2 border-blue-500 shadow-md mb-3"
+                className="w-24 h-24 rounded-full border border-gray-200 mb-3"
               />
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{user?.email}</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Usuario registrado</p>
+              <h2 className="text-lg font-semibold text-black">{user?.email}</h2>
+              <p className="text-sm text-gray-500">Usuario registrado</p>
             </div>
-          </motion.div>
+          </div>
         </div>
         {/* Sección: Acciones Rápidas (botones para cambiar contraseña y cerrar sesión) */}
         <div className="lg:w-1/3">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700"
-          >
-            <div className="flex items-center mb-6">
-              <Shield size={24} className="text-blue-600 mr-3" />
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Acciones Rápidas</h2>
+          <div className="bg-white rounded border border-gray-100 p-6">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-black">Acciones Rápidas</h2>
             </div>
             <div className="space-y-3">
               <button
                 ref={changePasswordButtonRef}
                 onClick={() => setIsChangingPassword(true)}
-                className="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                className="w-full px-4 py-2 bg-gray-50 hover:bg-gray-100 text-black rounded transition"
               >
-                <div className="flex items-center">
-                  <Key size={18} className="text-gray-400 mr-2" />
-                  <span className="text-gray-700 dark:text-gray-100">Cambiar contraseña</span>
-                </div>
+                Cambiar contraseña
               </button>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-between px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900 dark:hover:bg-red-800 rounded-lg transition-colors"
+                className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded transition"
               >
-                <div className="flex items-center">
-                  <LogOut size={18} className="text-red-500 mr-2" />
-                  <span className="text-red-600 dark:text-red-400">Cerrar sesión</span>
-                </div>
+                Cerrar sesión
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
       {/* Modal: Formulario para cambiar contraseña */}
       {isChangingPassword && (
-        <motion.div
+        <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="change-password-title"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50"
         >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-md w-full transition-colors duration-300"
-          >
+          <div className="bg-white rounded p-6 max-w-md w-full border border-gray-100">
             {/* Título del modal: "Cambiar Contraseña" */}
-            <h3 id="change-password-title" className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Cambiar Contraseña</h3>
+            <h3 id="change-password-title" className="text-xl font-semibold text-black mb-4">Cambiar Contraseña</h3>
 
             {/* Mensajes de validación: Muestra errores o confirmación de éxito */}
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700 dark:bg-red-900 dark:border-red-600 dark:text-red-200">
-                <AlertCircle size={18} className="mr-2 flex-shrink-0" />
-                <span>{error}</span>
+              <div className="mb-4 p-3 bg-gray-100 rounded text-gray-700">
+                {error}
               </div>
             )}
-
             {success && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center text-green-700 dark:bg-green-900 dark:border-green-600 dark:text-green-200">
-                <Check size={18} className="mr-2 flex-shrink-0" />
-                <span>{success}</span>
+              <div className="mb-4 p-3 bg-gray-100 rounded text-gray-700">
+                {success}
               </div>
             )}
 
             {/* Formulario: Campos para contraseña actual, nueva y confirmación */}
             <form onSubmit={handlePasswordChange} className="space-y-4">
-              {/* Campo: Contraseña actual con visibilidad toggle */}
+              {/* Campo: Contraseña actual */}
               <div>
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
                   Contraseña actual
                 </label>
-                <div className="relative">
+                <input
+                  ref={currentPasswordRef}
+                  type={showCurrentPassword ? "text" : "password"}
+                  id="currentPassword"
+                  value={currentPassword}
+                  onChange={(e) => { setCurrentPassword(e.target.value); if (error) setError(null); }}
+                  className="w-full px-3 py-2 border border-gray-300 text-black focus:outline-none focus:ring-0 focus:border-black"
+                />
+                <div className="flex items-center mt-1">
                   <input
-                    ref={currentPasswordRef}
-                    type={showCurrentPassword ? "text" : "password"}
-                    id="currentPassword"
-                    value={currentPassword}
-                    onChange={(e) => { setCurrentPassword(e.target.value); if (error) setError(null); }}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out ${error ? 'border-red-500' : 'border-gray-300'} pr-12`}
+                    type="checkbox"
+                    id="showCurrentPassword"
+                    checked={showCurrentPassword}
+                    onChange={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="mr-2"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  >
-                    {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                  <label htmlFor="showCurrentPassword" className="text-xs text-gray-600">Mostrar contraseña</label>
                 </div>
               </div>
 
               {/* Campo: Nueva contraseña con indicador de fortaleza y validación */}
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
                   Nueva contraseña
                 </label>
-                <div className="relative">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  id="newPassword"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    validatePassword(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 text-black focus:outline-none focus:ring-0 focus:border-black"
+                />
+                <div className="flex items-center mt-1">
                   <input
-                    type={showNewPassword ? "text" : "password"}
-                    id="newPassword"
-                    value={newPassword}
-                    onChange={(e) => {
-                      setNewPassword(e.target.value);
-                      validatePassword(e.target.value);
-                      if (error) setError(null);
-                    }}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out ${error ? 'border-red-500' : 'border-gray-300'} pr-12`}
+                    type="checkbox"
+                    id="showNewPassword"
+                    checked={showNewPassword}
+                    onChange={() => setShowNewPassword(!showNewPassword)}
+                    className="mr-2"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  >
-                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                  <label htmlFor="showNewPassword" className="text-xs text-gray-600">Mostrar contraseña</label>
                 </div>
                 {newPassword && (
                   <div className="mt-2">
                     <div className="flex gap-1 mb-1">
                       {[1, 2, 3, 4, 5].map((_, i) => (
-                        <div key={i} className={`h-1 flex-1 rounded-full ${passwordStrength > i ? getPasswordStrengthClass() : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+                        <div key={i} className={`h-1 flex-1 rounded-full ${passwordStrength > i ? 'bg-gray-600' : 'bg-gray-200'}`}></div>
                       ))}
                     </div>
                     <div className="text-xs space-y-1 mt-2">
                       <div className="flex items-center">
-                        <span className={`mr-1 ${passwordValidation.length ? 'text-green-500' : 'text-gray-400'}`}>
-                          {passwordValidation.length ? <Check size={12} /> : '•'}
+                        <span className={`mr-1 ${passwordValidation.length ? 'text-gray-700' : 'text-gray-400'}`}>
+                          {passwordValidation.length ? '✓' : '•'}
                         </span>
-                        <span className={passwordValidation.length ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}>Mínimo 6 caracteres</span>
+                        <span className={passwordValidation.length ? 'text-gray-700' : 'text-gray-400'}>Mínimo 6 caracteres</span>
                       </div>
                       <div className="flex items-center">
-                        <span className={`mr-1 ${passwordValidation.uppercase ? 'text-green-500' : 'text-gray-400'}`}>
-                          {passwordValidation.uppercase ? <Check size={12} /> : '•'}
+                        <span className={`mr-1 ${passwordValidation.uppercase ? 'text-gray-700' : 'text-gray-400'}`}>
+                          {passwordValidation.uppercase ? '✓' : '•'}
                         </span>
-                        <span className={passwordValidation.uppercase ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}>Al menos una mayúscula</span>
+                        <span className={passwordValidation.uppercase ? 'text-gray-700' : 'text-gray-400'}>Al menos una mayúscula</span>
                       </div>
                       <div className="flex items-center">
-                        <span className={`mr-1 ${passwordValidation.number ? 'text-green-500' : 'text-gray-400'}`}>
-                          {passwordValidation.number ? <Check size={12} /> : '•'}
+                        <span className={`mr-1 ${passwordValidation.number ? 'text-gray-700' : 'text-gray-400'}`}>
+                          {passwordValidation.number ? '✓' : '•'}
                         </span>
-                        <span className={passwordValidation.number ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}>Al menos un número</span>
+                        <span className={passwordValidation.number ? 'text-gray-700' : 'text-gray-400'}>Al menos un número</span>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Campo: Confirmación de la nueva contraseña con visibilidad toggle */}
+              {/* Campo: Confirmación de la nueva contraseña */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                   Confirmar nueva contraseña
                 </label>
-                <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => { setConfirmPassword(e.target.value); if (error) setError(null); }}
+                  className="w-full px-3 py-2 border border-gray-300 text-black focus:outline-none focus:ring-0 focus:border-black"
+                />
+                <div className="flex items-center mt-1">
                   <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    id="confirmPassword"
-                    value={confirmPassword}
-                    onChange={(e) => { setConfirmPassword(e.target.value); if (error) setError(null); }}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out ${error ? 'border-red-500' : 'border-gray-300'} pr-12`}
+                    type="checkbox"
+                    id="showConfirmPassword"
+                    checked={showConfirmPassword}
+                    onChange={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="mr-2"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                  <label htmlFor="showConfirmPassword" className="text-xs text-gray-600">Mostrar contraseña</label>
                 </div>
               </div>
 
@@ -383,29 +337,29 @@ const Profile: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsChangingPassword(false)}
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
+                  className="px-4 py-2 bg-gray-100 text-black hover:bg-gray-200"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={loadingChange || !passwordStrength || newPassword !== confirmPassword}
-                  className={`px-4 py-2 rounded-lg flex items-center justify-center transition-all duration-200 ease-in-out ${
+                  className={
                     loadingChange || !passwordStrength || newPassword !== confirmPassword
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 transition-all duration-200 ease-in-out'
-                  } text-white`}
+                      ? "px-4 py-2 bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "px-4 py-2 bg-black text-white hover:bg-gray-900"
+                  }
                 >
                   {loadingChange ? (
-                    <span className="animate-spin h-5 w-5 border-t-2 border-white rounded-full" />
+                    <span className="inline-block h-5 w-5 border-t-2 border-gray-300 rounded-full animate-spin" />
                   ) : (
                     'Actualizar contraseña'
                   )}
                 </button>
               </div>
             </form>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
     </div>
   );

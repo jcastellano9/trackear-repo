@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 const Layout: React.FC = () => {
   return (
     <motion.div
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 text-gray-900 dark:text-gray-100 transition-colors"
+      className="min-h-screen bg-white dark:bg-black text-black dark:text-white"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// Iconos de emoji para cotizacionessss
-const dollarEmoji: Record<string, string> = {
-  'USD Oficial': '💵',
-  'USD Blue': '🔵',
-  'USD Bolsa': '💹',
-  'USD CCL': '📈',
-  'USD Mayorista': '🏦',
-  'USD Tarjeta': '💳',
-  'USD Cripto': '🪙',
-};
 import YieldAnalysis from './YieldAnalysis';
-import { motion } from 'framer-motion';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -22,7 +11,6 @@ import {
   Legend,
   Filler
 } from 'chart.js';
-import { DollarSign, Bitcoin, Wallet, ArrowUpRight, Loader, TrendingUp, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
 // Registrar componentes de ChartJS
@@ -443,128 +431,118 @@ const Analysis: React.FC = () => {
     <div className="flex space-x-2 mb-0">
       <button
         onClick={() => setActiveMainSection('quotes')}
-        className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+        className={`px-4 py-2 rounded-lg border ${
           activeMainSection === 'quotes'
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ? 'bg-black text-white'
+            : 'bg-gray-100 text-black'
         }`}
       >
-        <TrendingUp size={18} className="mr-2" />
         Cotizaciones
       </button>
       <button
         onClick={() => setActiveMainSection('rates')}
-        className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+        className={`px-4 py-2 rounded-lg border ${
           activeMainSection === 'rates'
-            ? 'bg-purple-600 text-white'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ? 'bg-black text-white'
+            : 'bg-gray-100 text-black'
         }`}
       >
-        <ArrowUpRight size={18} className="mr-2" />
         Rendimientos
       </button>
     </div>
   );
 
-  // Botones para elegir entre Dólar, Cripto y PIX
+  // Botones simples para elegir entre Dólar, Cripto y PIX
   const QuoteSectionsNav = () => (
     <div className="flex space-x-2 mb-2">
       <button
         onClick={() => setActiveQuoteSection('dollar')}
-        className={`flex items-center px-4 py-1.5 rounded-lg transition-colors ${
+        className={`px-4 py-1.5 rounded-lg border ${
           activeQuoteSection === 'dollar'
-            ? 'bg-green-500 dark:bg-green-700 text-white'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ? 'bg-black text-white'
+            : 'bg-gray-100 text-black'
         }`}
       >
-        <DollarSign size={18} className="mr-2" />
         Dólar
       </button>
       <button
         onClick={() => setActiveQuoteSection('crypto')}
-        className={`flex items-center px-4 py-1.5 rounded-lg transition-colors ${
+        className={`px-4 py-1.5 rounded-lg border ${
           activeQuoteSection === 'crypto'
-            ? 'bg-orange-600 text-white'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ? 'bg-black text-white'
+            : 'bg-gray-100 text-black'
         }`}
       >
-        <Bitcoin size={18} className="mr-2" />
         Cripto
       </button>
       <button
         onClick={() => setActiveQuoteSection('pix')}
-        className={`flex items-center px-4 py-1.5 rounded-lg transition-colors ${
+        className={`px-4 py-1.5 rounded-lg border ${
           activeQuoteSection === 'pix'
-            ? 'bg-teal-600 text-white'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ? 'bg-black text-white'
+            : 'bg-gray-100 text-black'
         }`}
       >
-        <Wallet size={18} className="mr-2" />
         PIX
       </button>
     </div>
   );
 
 
-  // Componente que muestra cada tarjeta de cotización
+  // Componente que muestra cada tarjeta de cotización (minimalista)
   const QuoteCard = ({ quote }: { quote: Quote }) => {
     // Ajuste especial para mostrar la cotización PIX en USD
     let isPixUsd = activeQuoteSection === 'pix' && selectedPixSymbol === 'USD';
-    let displayLabel = activeQuoteSection === 'pix' ? 'Pagar 1 Real es' : 'Venta';
+    let displayLabel = activeQuoteSection === 'pix'
+      ? selectedPixSymbol === 'USD'
+        ? 'Pagar 1 Dólar es'
+        : 'Pagar 1 Real es'
+      : 'Venta';
     let displayValue: number | null | undefined = quote.buy;
     if (isPixUsd && typeof quote.buy === 'number' && quote.buy !== 0) {
       displayValue = 1 / quote.buy;
     }
     let displaySuffix = '';
     let displayNote = '';
-    if (isPixUsd) {
-      displaySuffix = 'R$';
-      displayNote = 'para pagar';
+    if (activeQuoteSection === 'pix') {
+      if (selectedPixSymbol === 'USD') {
+        displaySuffix = 'R$';
+        displayNote = 'para pagar';
+      } else if (selectedPixSymbol === 'ARS') {
+        displaySuffix = '';
+        displayNote = 'para pagar';
+      }
     }
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 cursor-pointer"
+      <div
+        className="bg-white p-4 border text-black cursor-pointer"
         onClick={() => quote.source && window.open(quote.source, '_blank')}
       >
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center space-x-2">
-            {quote.logo && (
-              <img src={quote.logo} alt={quote.name} className="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700" />
-            )}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                {quote.name.startsWith('USD') ? (dollarEmoji[quote.name] || '') : ''}{' '}
-                {quote.name.split('—')[0].trim()}
-              </h3>
-            </div>
-            {quote.is24x7 && (
-              <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded font-semibold">24/7</span>
-            )}
-          </div>
-          <div className="flex flex-col items-end">
+        <div className="mb-2">
+          <div>
+            <h3 className="text-base font-semibold text-black">
+              {quote.name.split('—')[0].trim()}
+            </h3>
           </div>
         </div>
-
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{displayLabel}</p>
-            <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+            <p className="text-xs text-black mb-1">{displayLabel}</p>
+            <p className="text-lg font-semibold text-black">
               {displayValue != null
                 ? isPixUsd
                   ? ` ${displayValue.toFixed(2)} ${displaySuffix}`
                   : formatCurrency(displayValue)
                 : 'N/A'}
             </p>
-            {isPixUsd && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{displayNote}</p>
+            {displayNote && (
+              <p className="text-xs text-black mt-1">{displayNote}</p>
             )}
           </div>
           {activeQuoteSection !== 'pix' && (
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Compra</p>
-              <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+              <p className="text-xs text-black mb-1">Compra</p>
+              <p className="text-lg font-semibold text-black">
                 {typeof quote.sell === 'number'
                   ? formatCurrency(quote.sell)
                   : 'N/A'}
@@ -572,39 +550,34 @@ const Analysis: React.FC = () => {
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
     );
   };
 
 
 return (
-    <div className="space-y-4 text-gray-900 dark:text-gray-100">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center space-x-2">
+    <div className="space-y-4 text-black">
+      <div>
+        <h1 className="text-2xl font-bold text-black flex items-center space-x-2">
           <span>Análisis</span>
         </h1>
-      </motion.div>
+      </div>
 
       <MainSectionTabs />
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-700 rounded-lg flex items-center text-red-700 dark:text-red-400">
-          <AlertCircle size={20} className="mr-2 flex-shrink-0" />
+        <div className="mb-4 p-4 bg-white border text-black rounded flex items-center">
           <span>{error}</span>
         </div>
       )}
 
       {activeMainSection === 'quotes' ? (
         <>
-          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center space-x-2">
+          <h2 className="text-xl font-semibold text-black mb-2 flex items-center space-x-2">
           </h2>
           <QuoteSectionsNav />
           <div className="mt-20 mb-3">
-            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+            <h3 className="text-2xl font-bold text-black">
               {activeQuoteSection === 'dollar' && (
                 selectedCurrency === 'USD' ? 'Dólares' :
                 selectedCurrency === 'Bancos' ? 'Cotizaciones en Bancos' :
@@ -619,66 +592,55 @@ return (
             </h3>
           </div>
 
-          {/* Mostrar filtro y última actualización */}
+          {/* Filtros y última actualización */}
           <div className="flex justify-between items-center mb-4">
             {/* Filtros visuales según sección */}
             {activeQuoteSection === 'dollar' && (
-              <div className="flex space-x-2">
-                {['USD', 'Bancos', 'Billeteras Virtuales'].map(option => (
-                  <button
-                    key={option}
-                    onClick={() => setSelectedCurrency(option as 'USD' | 'Bancos' | 'Alternativos' | 'Billeteras Virtuales')}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      selectedCurrency === option
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
+              <div>
+                <select
+                  value={selectedCurrency}
+                  onChange={e => setSelectedCurrency(e.target.value as any)}
+                  className="bg-white text-black border rounded px-3 py-1.5 text-sm"
+                >
+                  <option value="USD">USD</option>
+                  <option value="Bancos">Bancos</option>
+                  <option value="Billeteras Virtuales">Billeteras Virtuales</option>
+                </select>
               </div>
             )}
             {activeQuoteSection === 'crypto' && (
-              <div className="flex space-x-2">
-                {['USDT', 'USDC', 'BTC', 'ETH'].map(token => (
-                  <button
-                    key={token}
-                    onClick={() => setSelectedToken(token === selectedToken ? null : token)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      selectedToken === token
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    {token}
-                  </button>
-                ))}
+              <div>
+                <select
+                  value={selectedToken || ''}
+                  onChange={e => setSelectedToken(e.target.value || null)}
+                  className="bg-white text-black border rounded px-3 py-1.5 text-sm"
+                >
+                  <option value="">Todas</option>
+                  <option value="USDT">USDT</option>
+                  <option value="USDC">USDC</option>
+                  <option value="BTC">BTC</option>
+                  <option value="ETH">ETH</option>
+                </select>
               </div>
             )}
             {activeQuoteSection === 'pix' && (() => {
-              // Símbolos válidos: 'ARS' y 'USD'
               const uniquePixSymbols: ('ARS' | 'USD')[] = ['ARS', 'USD'].filter(symbol => pixQuotes.some(q => q.name.includes(`paga con ${symbol}`))) as ('ARS' | 'USD')[];
               return (
-                <div className="flex space-x-2">
-                  {uniquePixSymbols.map(symbol => (
-                    <button
-                      key={symbol}
-                      onClick={() => setSelectedPixSymbol(symbol === selectedPixSymbol ? null : symbol as 'ARS' | 'USD')}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        selectedPixSymbol === symbol
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-                      }`}
-                    >
-                      {symbol}
-                    </button>
-                  ))}
+                <div>
+                  <select
+                    value={selectedPixSymbol || ''}
+                    onChange={e => setSelectedPixSymbol(e.target.value ? e.target.value as 'ARS' | 'USD' : null)}
+                    className="bg-white text-black border rounded px-3 py-1.5 text-sm"
+                  >
+                    {uniquePixSymbols.map(symbol => (
+                      <option key={symbol} value={symbol}>{symbol}</option>
+                    ))}
+                  </select>
                 </div>
               );
             })()}
             <div className="flex items-center space-x-4 ml-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-black">
                 Última actualización: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
               </p>
               {(activeQuoteSection === 'crypto'
@@ -688,7 +650,7 @@ return (
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value as any)}
-                  className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded px-4 py-1.5 text-sm w-60"
+                  className="bg-white text-black border rounded px-4 py-1.5 text-sm w-60"
                 >
                   {activeQuoteSection === 'pix' ? (
                     <>
@@ -712,12 +674,11 @@ return (
             </div>
           </div>
 
-          {/*Mejores precios para cripto con token seleccionado o dólar con Bancos/Billeteras */}
+          {/* Mejores precios para cripto con token seleccionado o dólar con Bancos/Billeteras */}
           {((activeQuoteSection === 'crypto' && selectedToken) ||
             (activeQuoteSection === 'dollar' && (selectedCurrency === 'Bancos' || selectedCurrency === 'Billeteras Virtuales'))) && (() => {
             let quotes: Quote[] = [];
             if (activeQuoteSection === 'crypto' && selectedToken) {
-              // Filtrar las cotizaciones cripto solo por el token seleccionado
               quotes = cryptoQuotes.filter(q => {
                 const match = q.name.match(/\(([^)]+)\)$/);
                 const token = match?.[1] || 'OTROS';
@@ -736,38 +697,33 @@ return (
                 : a
             , quotes[0]);
 
-            const BestCard = ({ title, value, entity }: { title: string, value: string, entity: Quote }) => (
-              <div
-                className={`rounded-xl p-4 border flex-1
-                  ${activeQuoteSection === 'dollar'
-                    ? 'bg-green-50 dark:bg-green-900 border-green-300 dark:border-green-600'
-                    : 'bg-orange-50 dark:bg-orange-900 border-orange-300 dark:border-orange-600'
-                  }`}
-              >
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{title}</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">{value}</p>
-                <div className="flex items-center space-x-2">
-                  {entity.logo && <img src={entity.logo} className="w-5 h-5 rounded-full border dark:border-gray-600" />}
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{entity.name}</span>
-                  {entity.is24x7 && (
-                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded font-semibold">24/7</span>
-                  )}
-                </div>
-              </div>
-            );
-
+            // Tarjetas uniformes para mejores precios
             return (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <BestCard title="Mejor para vender" value={formatCurrency(bestBuy.buy || 0)} entity={bestBuy} />
-                <BestCard title="Mejor para comprar" value={formatCurrency(bestSell.sell || 0)} entity={bestSell} />
-                <BestCard title="Menor Spread" value={formatCurrency(bestSpread.spread || 0)} entity={bestSpread} />
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2">
+                    <span className="font-semibold">Mejor para vender:</span>
+                    <span>{bestBuy.name}</span>
+                    <span className="font-semibold">{formatCurrency(bestBuy.buy || 0)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2">
+                    <span className="font-semibold">Mejor para comprar:</span>
+                    <span>{bestSell.name}</span>
+                    <span className="font-semibold">{formatCurrency(bestSell.sell || 0)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2">
+                    <span className="font-semibold">Menor Spread:</span>
+                    <span>{bestSpread.name}</span>
+                    <span className="font-semibold">{formatCurrency(bestSpread.spread || 0)}</span>
+                  </div>
+                </div>
               </div>
             );
           })()}
 
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <Loader className="animate-spin text-blue-600" size={24} />
+              <span className="text-black">Cargando...</span>
             </div>
           ) : (
             <>
@@ -783,7 +739,6 @@ return (
               {activeQuoteSection === 'crypto' && (
                 <>
                   {(() => {
-                    {/* Agrupar cotizaciones de cripto por token para mostrarlas juntas */}
                     const groupedCryptoQuotes = cryptoQuotes.reduce((acc: { [token: string]: Quote[] }, quote) => {
                       const match = quote.name.match(/\(([^)]+)\)$/);
                       const token = match?.[1] || 'OTROS';
@@ -791,15 +746,13 @@ return (
                       acc[token].push(quote);
                       return acc;
                     }, {});
-
-                    // Si hay un token seleccionado, solo mostrar ese grupo; si no, mostrar todos los tokens disponibles
                     return (
                       <>
                         {Object.entries(groupedCryptoQuotes)
                           .filter(([token]) => !selectedToken || token === selectedToken)
                           .map(([token, quotes]) => (
                             <div key={token} className="mb-8 w-full">
-                              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">{token}</h3>
+                              <h3 className="text-lg font-semibold text-black mb-3">{token}</h3>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {sortQuotes(quotes).map((quote, index) => (
                                   <QuoteCard key={`${token}-${index}`} quote={quote} />
@@ -809,12 +762,12 @@ return (
                           ))}
                       </>
                     );
-              })()}
+                  })()}
                 </>
               )}
               {activeQuoteSection === 'pix' && (
                 <>
-                  {/* Calcular mejores opciones de PIX */}
+                  {/* Mejores opciones PIX (minimalista) */}
                   {(() => {
                     const filteredBySymbol = pixQuotes.filter(q =>
                       selectedPixSymbol ? q.name.toLowerCase().includes(`paga con ${selectedPixSymbol.toLowerCase()}`) : true
@@ -825,41 +778,39 @@ return (
                       q.name.toLowerCase().includes('tarjeta') && !q.name.toLowerCase().includes('mep')
                     );
                     return (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="mb-6 flex flex-wrap gap-4">
                         {bestQuote && (
-                          <div className="rounded-xl shadow-sm p-6 border border-teal-100 bg-teal-50 dark:border-teal-700 dark:bg-teal-800 text-teal-700 dark:text-teal-200">
-                            <p className="text-base">
-                              <strong>Mejor App:</strong> {bestQuote.name.split('—')[0].trim()}  <strong>
-                                {selectedPixSymbol === 'USD' && bestQuote.buy
-                                  ? (1 / bestQuote.buy).toFixed(2) + ' R$'
-                                  : formatCurrency(bestQuote.buy ?? 0)
-                                }
-                              </strong>
-                            </p>
+                          <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2 w-fit">
+                            <span className="font-semibold">Mejor App:</span>
+                            <span>{bestQuote.name.split('—')[0].trim()}</span>
+                            <span className="font-semibold">
+                              {selectedPixSymbol === 'USD' && bestQuote.buy
+                                ? (1 / bestQuote.buy).toFixed(2) + ' R$'
+                                : formatCurrency(bestQuote.buy ?? 0)
+                              }
+                            </span>
                           </div>
                         )}
                         {tarjetaMepQuote && (
-                          <div className="rounded-xl shadow-sm p-6 border border-teal-100 bg-teal-50 dark:border-teal-700 dark:bg-teal-800 text-teal-700 dark:text-teal-200">
-                            <p className="text-base">
-                              <strong>Tarjeta + MEP:</strong> <strong>
-                                {selectedPixSymbol === 'USD' && tarjetaMepQuote.buy
-                                  ? (1 / tarjetaMepQuote.buy).toFixed(2) + ' R$'
-                                  : formatCurrency(tarjetaMepQuote.buy ?? 0)
-                                }
-                              </strong>
-                            </p>
+                          <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2 w-fit">
+                            <span className="font-semibold">Tarjeta + MEP:</span>
+                            <span className="font-semibold">
+                              {selectedPixSymbol === 'USD' && tarjetaMepQuote.buy
+                                ? (1 / tarjetaMepQuote.buy).toFixed(2) + ' R$'
+                                : formatCurrency(tarjetaMepQuote.buy ?? 0)
+                              }
+                            </span>
                           </div>
                         )}
                         {tarjetaQuote && (
-                          <div className="rounded-xl shadow-sm p-6 border border-teal-100 bg-teal-50 dark:border-teal-700 dark:bg-teal-800 text-teal-700 dark:text-teal-200">
-                            <p className="text-base">
-                              <strong>Dólar Tarjeta:</strong> <strong>
-                                {selectedPixSymbol === 'USD' && tarjetaQuote.buy
-                                  ? (1 / tarjetaQuote.buy).toFixed(2) + ' R$'
-                                  : formatCurrency(tarjetaQuote.buy ?? 0)
-                                }
-                              </strong>
-                            </p>
+                          <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2 w-fit">
+                            <span className="font-semibold">Dólar Tarjeta:</span>
+                            <span className="font-semibold">
+                              {selectedPixSymbol === 'USD' && tarjetaQuote.buy
+                                ? (1 / tarjetaQuote.buy).toFixed(2) + ' R$'
+                                : formatCurrency(tarjetaQuote.buy ?? 0)
+                              }
+                            </span>
                           </div>
                         )}
                       </div>
@@ -883,7 +834,7 @@ return (
                       />
                     ))}
                     {pixQuotes.length === 0 && !loading && (
-                      <div className="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
+                      <div className="col-span-full text-center py-8 text-black">
                         No hay cotizaciones PIX disponibles en este momento
                       </div>
                     )}
@@ -898,7 +849,7 @@ return (
 
       {activeMainSection === 'rates' && (
         <div className="mt-10">
-          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center space-x-2">
+          <h2 className="text-xl font-semibold text-black mb-4 flex items-center space-x-2">
           </h2>
           <YieldAnalysis activeSection="plazos" />
         </div>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePortfolioData } from '../hooks/usePortfolioData';
-import { motion } from 'framer-motion';
-import { Search, Plus, Loader, X, Calendar, DollarSign, Edit2, Trash, Heart, ArrowDownCircle } from 'lucide-react';
+
 
 interface Investment {
   id: string;
@@ -13,7 +12,6 @@ interface Investment {
   allocation: number;
   purchaseDate: string;
   currency: 'USD' | 'ARS';
-  isFavorite?: boolean;
 }
 
 interface NewInvestment {
@@ -43,7 +41,6 @@ const Portfolio: React.FC = () => {
     addInvestment,
     updateInvestment,
     deleteInvestment,
-    toggleFavorite,
     handleAssetSelect,
     success,
     setSuccess,
@@ -58,13 +55,12 @@ const Portfolio: React.FC = () => {
   const [mergeTransactions, setMergeTransactions] = useState(true);
   const [showInARS, setShowInARS] = useState(true);
   const [sortBy, setSortBy] = useState<
-    'favoritosFechaDesc' |
     'tickerAZ' | 'tickerZA' |
     'gananciaPorcentajeAsc' | 'gananciaPorcentajeDesc' |
     'gananciaValorAsc' | 'gananciaValorDesc' |
     'tenenciaAsc' | 'tenenciaDesc' |
     'fechaAsc' | 'fechaDesc'
-  >('favoritosFechaDesc');
+  >('fechaDesc');
 
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -212,12 +208,6 @@ const Portfolio: React.FC = () => {
   };
   // sortedInvestments: Ordena inversiones según criterio seleccionado
   const sortedInvestments = [...displayedInvestments].sort((a, b) => {
-    if (sortBy === 'favoritosFechaDesc') {
-      const favDiff = (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
-      if (favDiff !== 0) return favDiff;
-      return new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime();
-    }
-
     if (sortBy === 'tickerAZ') return a.ticker.localeCompare(b.ticker);
     if (sortBy === 'tickerZA') return b.ticker.localeCompare(a.ticker);
 
@@ -344,178 +334,91 @@ const Portfolio: React.FC = () => {
         </div>
       )}
       <div className="space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-wrap justify-between items-center gap-4"
-        >
+        <div className="flex flex-wrap justify-between items-center gap-4">
           <div className="text-center sm:text-left">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Mi Cartera</h1>
-            <p className="text-gray-600 dark:text-gray-400">Gestiona tus inversiones</p>
+            <h1 className="text-2xl font-bold text-black">Mi Cartera</h1>
+            <p className="text-gray-600">Gestiona tus inversiones</p>
           </div>
           <div className="flex gap-3 flex-wrap justify-end items-center">
             <button
               onClick={() => exportToCSV()}
-              className="px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors bg-pink-600 text-white hover:bg-pink-700"
+              className="px-4 py-2 text-sm bg-black text-white border border-black"
               title="Descargar CSV"
             >
-              <ArrowDownCircle size={16} className="text-white" />
               Exportar
             </button>
-            <button
-              onClick={() => setShowInARS(prev => !prev)}
-              className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors ${
-                showInARS
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-[#0EA5E9] text-white hover:bg-[#0284c7]'
-              }`}
-            >
-              <DollarSign size={16} className="text-white" />
-              Ver en {showInARS ? 'USD' : 'ARS'}
-            </button>
+            <label className="flex items-center gap-2 px-4 py-2 text-sm bg-white text-black border border-gray-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showInARS}
+                onChange={() => setShowInARS(prev => !prev)}
+                className="mr-2"
+              />
+              Mostrar en ARS
+            </label>
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 rounded-lg border text-sm flex items-center gap-2 transition-colors bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
+              className="px-4 py-2 text-sm bg-black text-white border border-black"
             >
               Agregar
-              <Plus size={18} />
             </button>
           </div>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 text-center text-sm font-medium">
-          <div className={`p-4 rounded-xl ${
-            activeTypeFilter === 'Todos'
-              ? 'bg-gradient-to-br from-blue-100 to-blue-50 text-blue-700'
-              : activeTypeFilter === 'Cripto'
-              ? 'bg-gradient-to-br from-orange-100 to-orange-50 text-orange-700'
-              : activeTypeFilter === 'CEDEAR'
-              ? 'bg-gradient-to-br from-purple-100 to-purple-50 text-purple-700'
-              : 'bg-[#E0F2FE] text-[#0EA5E9]'
-          } shadow-sm border flex flex-col justify-center items-center`}>
-            <h3 className="">Total de inversiones</h3>
-            <p className="text-xl font-bold mt-1 text-center leading-tight">
+          <div className="p-4 border bg-gray-100 flex flex-col justify-center items-center">
+            <h3>Total de inversiones</h3>
+            <p className="text-xl font-bold mt-1 text-center leading-tight text-black">
               {mergeTransactions
                 ? displayedInvestments.length
                 : filteredInvestments.length}
             </p>
           </div>
-
-          <div className={`p-4 rounded-xl ${
-            activeTypeFilter === 'Todos'
-              ? 'bg-gradient-to-br from-blue-100 to-blue-50 text-blue-700'
-              : activeTypeFilter === 'Cripto'
-              ? 'bg-gradient-to-br from-orange-100 to-orange-50 text-orange-700'
-              : activeTypeFilter === 'CEDEAR'
-              ? 'bg-gradient-to-br from-purple-100 to-purple-50 text-purple-700'
-              : 'bg-[#E0F2FE] text-[#0EA5E9]'
-          } shadow-sm border flex flex-col justify-center items-center`}>
+          <div className="p-4 border bg-gray-100 flex flex-col justify-center items-center">
             <h3>Invertido</h3>
-            <p className="text-xl font-bold mt-1">
+            <p className="text-xl font-bold mt-1 text-black">
               {formatCurrency(
                 resumenGlobal.invertido,
                 totalCurrencyToShow
               )}
             </p>
           </div>
-
-          <div className={`p-4 rounded-xl shadow-sm border flex flex-col justify-center items-center col-span-full md:col-span-2 md:col-start-3 ${
-            (() => {
-              const totalActual = investments.reduce((acc, i) => {
-                const key = i.ticker + '-' + i.type;
-                const currentPrice = marketPrices[key] ?? i.purchasePrice;
-                const val = currentPrice * i.quantity;
-                if (showInARS) {
-                  if (i.currency === 'USD' && cclPrice) return acc + val * cclPrice;
-                  if (i.currency === 'ARS') return acc + val;
-                } else {
-                  if (i.currency === 'ARS' && cclPrice) return acc + val / cclPrice;
-                  if (i.currency === 'USD') return acc + val;
-                }
-                return acc;
-              }, 0);
-              const totalInvertido = investments.reduce((acc, i) => {
-                const val = i.purchasePrice * i.quantity;
-                if (showInARS) {
-                  if (i.currency === 'USD' && cclPrice) return acc + val * cclPrice;
-                  if (i.currency === 'ARS') return acc + val;
-                } else {
-                  if (i.currency === 'ARS' && cclPrice) return acc + val / cclPrice;
-                  if (i.currency === 'USD') return acc + val;
-                }
-                return acc;
-              }, 0);
-              if (totalActual > totalInvertido) return 'bg-green-50 text-green-700';
-              if (totalActual < totalInvertido) return 'bg-red-50 text-red-700';
-              return 'bg-blue-50 text-blue-700';
-            })()
-          }`}>
+          <div className="p-4 border bg-gray-100 flex flex-col justify-center items-center col-span-full md:col-span-2 md:col-start-3">
             <h3>Valor Total del Portafolio</h3>
-            <p className="text-xl font-bold mt-1 text-current">
+            <p className="text-xl font-bold mt-1 text-black">
               {formatCurrency(
                 resumenGlobalCompleto.valorActual,
                 showInARS ? 'ARS' : 'USD'
               )}
             </p>
           </div>
-
-          <div className={`p-4 rounded-xl shadow-sm border flex flex-col justify-center items-center ${
-            (() => {
-              const actual = resumenGlobal.valorActual;
-              const invertido = resumenGlobal.invertido;
-              if (actual > invertido) return 'bg-green-50 text-green-700';
-              if (actual < invertido) return 'bg-red-50 text-red-700';
-              return 'bg-blue-50 text-blue-700';
-            })()
-          }`}>
+          <div className="p-4 border bg-gray-100 flex flex-col justify-center items-center">
             <h3>Actual</h3>
-            <p className="text-xl font-bold mt-1">
+            <p className="text-xl font-bold mt-1 text-black">
               {formatCurrency(resumenGlobal.valorActual, totalCurrencyToShow)}
             </p>
           </div>
-
-          <div className={`p-4 rounded-xl shadow-sm border flex flex-col justify-center items-center ${
-            (() => {
-              const actual = resumenGlobal.valorActual;
-              const invertido = resumenGlobal.invertido;
-              if (actual > invertido) return 'bg-green-50 text-green-700';
-              if (actual < invertido) return 'bg-red-50 text-red-700';
-              return 'bg-blue-50 text-blue-700';
-            })()
-          }`}>
+          <div className="p-4 border bg-gray-100 flex flex-col justify-center items-center">
             <h3>Resultado</h3>
-            <p className="text-xl font-bold mt-1">
+            <p className="text-xl font-bold mt-1 text-black">
               {formatCurrency(resumenGlobal.cambioTotal, totalCurrencyToShow)} ({resultadoPorcentaje.toFixed(2)}%)
             </p>
           </div>
-
         </div>
 
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            className="bg-white backdrop-blur-sm bg-opacity-80 rounded-xl shadow-sm p-6 border border-gray-100"
-        >
+        <div className="bg-white p-6 border">
           <div className="flex flex-wrap gap-4 justify-between items-center mb-6">
-            <div className="flex flex-wrap gap-2 items-center">
-              {[
-                { label: 'Todos', value: 'Todos' },
-                { label: 'Acciones', value: 'Acción' },
-                { label: 'CEDEARs', value: 'CEDEAR' },
-                { label: 'Criptomonedas', value: 'Cripto' },
-              ].map(({ label, value }) => (
-                <button
-                  key={value}
-                  onClick={() => setActiveTypeFilter(value as any)}
-                  className={`px-3 py-1.5 h-9 rounded-lg text-sm border flex items-center justify-center ${
-                    activeTypeFilter === value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            <div>
+              <select
+                value={activeTypeFilter}
+                onChange={e => setActiveTypeFilter(e.target.value as any)}
+                className="border p-2"
+              >
+                <option value="Todos">Todos</option>
+                <option value="Acción">Acciones</option>
+                <option value="CEDEAR">CEDEARs</option>
+                <option value="Cripto">Criptomonedas</option>
+              </select>
             </div>
             <div className="flex items-center">
               <button
@@ -534,60 +437,50 @@ const Portfolio: React.FC = () => {
               </button>
             </div>
             <div className="flex-1 flex gap-4 justify-end flex-wrap items-center">
-              <div className="relative flex-1 w-full max-w-xs">
-                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar por Ticker o Nombre..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="max-w-xs w-full h-9 pl-10 pr-4 text-sm py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <select
-                  id="sortBy"
-                  value={sortBy}
-                  onChange={e =>
-                    setSortBy(e.target.value as
-                      'favoritosFechaDesc' |
-                      'tickerAZ' | 'tickerZA' |
-                      'gananciaPorcentajeAsc' | 'gananciaPorcentajeDesc' |
-                      'gananciaValorAsc' | 'gananciaValorDesc' |
-                      'tenenciaAsc' | 'tenenciaDesc' |
-                      'fechaAsc' | 'fechaDesc'
-                    )
-                  }
-                  className="w-full max-w-xs px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="favoritosFechaDesc">Favoritos</option>
-                  <option value="tickerAZ">Ticker A → Z</option>
-                  <option value="tickerZA">Ticker Z → A</option>
-                  <option value="gananciaPorcentajeAsc">Ganancia % ↑</option>
-                  <option value="gananciaPorcentajeDesc">Ganancia % ↓</option>
-                  <option value="gananciaValorAsc">Ganancia $ ↑</option>
-                  <option value="gananciaValorDesc">Ganancia $ ↓</option>
-                  <option value="tenenciaAsc">Tenencia ↑</option>
-                  <option value="tenenciaDesc">Tenencia ↓</option>
-                  <option value="fechaAsc">Fecha ↑</option>
-                  <option value="fechaDesc">Fecha ↓</option>
-                </select>
-              </div>
+              <input
+                type="text"
+                placeholder="Buscar por Ticker o Nombre..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-xs w-full h-9 px-3 text-sm py-1.5 border border-gray-300"
+              />
+              <select
+                id="sortBy"
+                value={sortBy}
+                onChange={e =>
+                  setSortBy(e.target.value as
+                    'tickerAZ' | 'tickerZA' |
+                    'gananciaPorcentajeAsc' | 'gananciaPorcentajeDesc' |
+                    'gananciaValorAsc' | 'gananciaValorDesc' |
+                    'tenenciaAsc' | 'tenenciaDesc' |
+                    'fechaAsc' | 'fechaDesc'
+                  )
+                }
+                className="w-full max-w-xs px-3 py-2 border border-gray-300 text-sm text-gray-800"
+              >
+                <option value="tickerAZ">Ticker A → Z</option>
+                <option value="tickerZA">Ticker Z → A</option>
+                <option value="gananciaPorcentajeAsc">Ganancia % ↑</option>
+                <option value="gananciaPorcentajeDesc">Ganancia % ↓</option>
+                <option value="gananciaValorAsc">Ganancia $ ↑</option>
+                <option value="gananciaValorDesc">Ganancia $ ↓</option>
+                <option value="tenenciaAsc">Tenencia ↑</option>
+                <option value="tenenciaDesc">Tenencia ↓</option>
+                <option value="fechaAsc">Fecha ↑</option>
+                <option value="fechaDesc">Fecha ↓</option>
+              </select>
             </div>
           </div>
 
           {loading ? (
               <div className="flex justify-center items-center h-40">
-                <Loader className="animate-spin text-blue-600" size={24} />
+                Cargando...
               </div>
           ) : displayedInvestments.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                   <tr className="text-left border-b border-gray-200">
-                    {!mergeTransactions && (
-                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">❤️</th>
-                    )}
                     <th className="pb-3 px-4 text-sm font-semibold text-gray-600">Ticker</th>
                     <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center max-w-[5rem]">Nombre</th>
                     <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">Precio Actual</th>
@@ -668,17 +561,6 @@ const Portfolio: React.FC = () => {
                             className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                         >
                           {/* Corazón (favorito, centrado) */}
-                          {!mergeTransactions && (
-                            <td className="py-4 px-4 text-center">
-                              <button onClick={() => toggleFavorite(investment.id)} className="mx-auto block">
-                                <Heart
-                                    size={18}
-                                    fill={investment.isFavorite ? '#f87171' : 'none'}
-                                    className={`stroke-2 ${investment.isFavorite ? 'text-red-500' : 'text-gray-400'} hover:scale-110 transition-transform`}
-                                />
-                              </button>
-                            </td>
-                          )}
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2">
                               <img
@@ -772,54 +654,50 @@ const Portfolio: React.FC = () => {
                           {!mergeTransactions && (
                             <td className="py-4 px-4 flex gap-4 justify-center">
                               <button
-                                  onClick={() => {
-                                    setEditId(investment.id);
-                                    setNewInvestment({
-                                      ticker: investment.ticker,
-                                      name: investment.name,
-                                      type: investment.type,
-                                      quantity: investment.quantity,
-                                      purchasePrice: investment.purchasePrice,
-                                      purchaseDate: investment.purchaseDate,
-                                      currency: investment.currency,
-                                      allocation: investment.allocation ?? 0,
-                                    });
-
-                                    // Pre‑seleccionar el activo para que se vea en el modal
-                                    const assetMatch = predefinedAssets.find(
-                                      (a) => a.ticker === investment.ticker && a.type === investment.type
-                                    );
-                                    if (assetMatch) {
-                                      setSelectedAsset(assetMatch as any);
-                                      // Mostrar también el precio actual si lo tenemos
-                                      const key = assetMatch.ticker + '-' + assetMatch.type;
-                                      _setCurrentPrice(marketPrices[key] ?? investment.purchasePrice);
-                                    } else {
-                                      setSelectedAsset(null);
-                                      _setCurrentPrice(null);
-                                    }
-
-                                    setAssetSearchTerm('');
-                                    setShowAddModal(true);
-                                  }}
-                                  className="text-yellow-500 hover:text-yellow-600 transition-colors"
-                                  title="Editar esta inversión"
+                                onClick={() => {
+                                  setEditId(investment.id);
+                                  setNewInvestment({
+                                    ticker: investment.ticker,
+                                    name: investment.name,
+                                    type: investment.type,
+                                    quantity: investment.quantity,
+                                    purchasePrice: investment.purchasePrice,
+                                    purchaseDate: investment.purchaseDate,
+                                    currency: investment.currency,
+                                    allocation: investment.allocation ?? 0,
+                                  });
+                                  const assetMatch = predefinedAssets.find(
+                                    (a) => a.ticker === investment.ticker && a.type === investment.type
+                                  );
+                                  if (assetMatch) {
+                                    setSelectedAsset(assetMatch as any);
+                                    const key = assetMatch.ticker + '-' + assetMatch.type;
+                                    _setCurrentPrice(marketPrices[key] ?? investment.purchasePrice);
+                                  } else {
+                                    setSelectedAsset(null);
+                                    _setCurrentPrice(null);
+                                  }
+                                  setAssetSearchTerm('');
+                                  setShowAddModal(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-700 text-sm"
+                                title="Editar esta inversión"
                               >
-                                <Edit2 size={18} />
+                                Editar
                               </button>
                               <button
-                                  onClick={async () => {
-                                    const confirmDelete = window.confirm('🗑️ ¿Seguro que deseas eliminar esta inversión? Esta acción no se puede deshacer.');
-                                    if (confirmDelete) {
-                                      await deleteInvestment(investment.id);
-                                      setSuccess('Inversión eliminada');
-                                      setTimeout(() => setSuccess(null), 2500);
-                                    }
-                                  }}
-                                  className="text-red-500 hover:text-red-600 transition-colors"
-                                  title="Eliminar esta inversión"
+                                onClick={async () => {
+                                  const confirmDelete = window.confirm('🗑️ ¿Seguro que deseas eliminar esta inversión? Esta acción no se puede deshacer.');
+                                  if (confirmDelete) {
+                                    await deleteInvestment(investment.id);
+                                    setSuccess('Inversión eliminada');
+                                    setTimeout(() => setSuccess(null), 2500);
+                                  }
+                                }}
+                                className="text-red-500 hover:text-red-600 transition-colors text-sm"
+                                title="Eliminar esta inversión"
                               >
-                                <Trash size={18} />
+                                Eliminar
                               </button>
                             </td>
                           )}
@@ -837,27 +715,18 @@ const Portfolio: React.FC = () => {
           <div className="mt-6 flex justify-center">
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium flex items-center gap-2"
+              className="px-5 py-2 bg-black text-white text-sm font-medium"
             >
-              <Plus size={16} />
               Agregar inversión
             </button>
           </div>
-        </motion.div>
+        </div>
 
         {showAddModal && (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-            >
-              <motion.div
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full border border-gray-200"
-              >
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white p-6 max-w-md w-full border border-gray-200">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-black">
                     {editId ? "✏️ Editar inversión" : "📈 Agregar nueva inversión"}
                   </h3>
                   <button
@@ -878,9 +747,9 @@ const Portfolio: React.FC = () => {
                         setSelectedAsset(null);
                         _setCurrentPrice(null);
                       }}
-                      className="text-gray-500 hover:text-gray-700 transition-colors"
+                      className="text-gray-500"
                   >
-                    <X size={20} />
+                    Cerrar
                   </button>
                 </div>
 
@@ -890,16 +759,24 @@ const Portfolio: React.FC = () => {
                     e.preventDefault();
                     let successMessage = '';
                     if (editId) {
-                      const { allocation, purchaseDate, purchasePrice, ...rest } = newInvestment;
+                      const { purchaseDate, purchasePrice, allocation, ...rest } = newInvestment;
                       await updateInvestment(editId, {
                         ...rest,
-                        allocation,
                         purchaseDate,
                         purchasePrice
                       });
                       successMessage = 'Inversión actualizada';
                     } else {
-                      await addInvestment(newInvestment);
+                      await addInvestment({
+                        ticker: newInvestment.ticker,
+                        name: newInvestment.name,
+                        type: newInvestment.type,
+                        quantity: newInvestment.quantity,
+                        purchasePrice: newInvestment.purchasePrice,
+                        purchaseDate: newInvestment.purchaseDate,
+                        currency: newInvestment.currency,
+                        allocation: newInvestment.allocation ?? 0,
+                      });
                       successMessage = 'Inversión agregada';
                     }
                     setSuccess(successMessage);
@@ -914,7 +791,7 @@ const Portfolio: React.FC = () => {
                       Seleccionar Activo
                     </label>
                     <div className="relative">
-                      <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500">
+                      <div className="flex items-center gap-2 border border-gray-300 px-3 py-2 bg-white">
                         <input
                           type="text"
                           id="assetSearch"
@@ -929,7 +806,7 @@ const Portfolio: React.FC = () => {
                         />
                       </div>
                       {(assetSearchTerm.length > 0 && filteredAssets.length > 0) && (
-                        <ul className="absolute left-0 w-full z-50 bg-white border border-gray-200 mt-1 max-h-52 overflow-y-auto rounded-lg shadow-lg">
+                        <ul className="absolute left-0 w-full z-50 bg-white border border-gray-200 mt-1 max-h-52 overflow-y-auto">
                           {filteredAssets.map((asset) => (
                             <li
                               key={asset.ticker}
@@ -952,7 +829,7 @@ const Portfolio: React.FC = () => {
                                 style={{ minWidth: 24, minHeight: 24, maxWidth: 24, maxHeight: 24 }}
                               />
                               <div>
-                                <p className="text-sm font-medium text-gray-800">{asset.name}</p>
+                                <p className="text-sm font-medium text-black">{asset.name}</p>
                                 <p className="text-xs text-gray-500">{asset.ticker}</p>
                               </div>
                             </li>
@@ -961,7 +838,7 @@ const Portfolio: React.FC = () => {
                       )}
                     </div>
                     {selectedAsset && (
-                      <div className="flex items-center gap-3 mt-3 p-2 bg-gray-50 border border-gray-200 rounded-lg">
+                      <div className="flex items-center gap-3 mt-3 p-2 bg-gray-100 border border-gray-200">
                         <img
                           src={selectedAsset.logo}
                           alt={selectedAsset.name}
@@ -969,18 +846,10 @@ const Portfolio: React.FC = () => {
                           style={{ minWidth: 28, minHeight: 28, maxWidth: 28, maxHeight: 28 }}
                         />
                         <div className="flex-1">
-                          <div className="font-semibold text-gray-800">{selectedAsset.name}</div>
+                          <div className="font-semibold text-black">{selectedAsset.name}</div>
                           <div className="text-xs text-gray-500">{selectedAsset.ticker}</div>
                         </div>
-                        <span
-                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                            selectedAsset.type === 'Cripto'
-                              ? 'bg-orange-100 text-orange-700'
-                              : selectedAsset.type === 'Acción'
-                              ? 'bg-sky-100 text-sky-700'
-                              : 'bg-purple-100 text-purple-700'
-                          }`}
-                        >
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-white text-black">
                           {selectedAsset.type === 'Cripto'
                             ? 'Criptomoneda'
                             : selectedAsset.type === 'Acción'
@@ -995,8 +864,7 @@ const Portfolio: React.FC = () => {
                     <label htmlFor="purchaseDate" className="block text-sm font-medium text-gray-800 mb-1">
                       Fecha de compra
                     </label>
-                    <div className="relative">
-                      <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <div>
                       <input
                           type="date"
                           id="purchaseDate"
@@ -1004,7 +872,7 @@ const Portfolio: React.FC = () => {
                           onChange={(e) =>
                               setNewInvestment((prev) => ({ ...prev, purchaseDate: e.target.value }))
                           }
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                          className="w-full px-3 py-2 border border-gray-300"
                       />
                     </div>
                   </div>
@@ -1030,18 +898,18 @@ const Portfolio: React.FC = () => {
                                 : Math.floor(Number(e.target.value.replace(',', ''))) || 0
                           }))
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                        className="w-full px-3 py-2 border border-gray-300 text-sm"
                     />
                     {newInvestment.quantity > 0 && newInvestment.purchasePrice > 0 && cclPrice && (
-                      <div className="mt-3 px-4 py-2 rounded-md border border-gray-200 bg-gray-50 text-gray-700 text-sm">
+                      <div className="mt-3 px-4 py-2 border border-gray-200 bg-gray-100 text-gray-700 text-sm">
                         Esta compra equivale actualmente a:{' '}
-                        <strong className="text-gray-900">
+                        <strong className="text-black">
                           {newInvestment.currency === 'USD'
                             ? `${(newInvestment.quantity * newInvestment.purchasePrice).toFixed(2)} USD`
                             : `${(newInvestment.quantity * newInvestment.purchasePrice).toFixed(2)} ARS`}
                         </strong>{' '}
                         /{' '}
-                        <strong className="text-gray-900">
+                        <strong className="text-black">
                           {newInvestment.currency === 'USD'
                             ? `${(newInvestment.quantity * newInvestment.purchasePrice * cclPrice).toFixed(2)} ARS`
                             : `${(newInvestment.quantity * newInvestment.purchasePrice / cclPrice).toFixed(2)} USD`}
@@ -1059,10 +927,10 @@ const Portfolio: React.FC = () => {
                           id="currency"
                           value={newInvestment.currency}
                           onChange={(e) => setNewInvestment(prev => ({ ...prev, currency: e.target.value as 'USD' | 'ARS' }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                          className="w-full px-4 py-2 border border-gray-300"
                       >
-                        <option value="ARS">🇦🇷 ARS</option>
-                        <option value="USD">🇺🇸 USD</option>
+                        <option value="ARS">ARS</option>
+                        <option value="USD">USD</option>
                       </select>
                     </div>
 
@@ -1070,8 +938,7 @@ const Portfolio: React.FC = () => {
                       <label htmlFor="purchasePrice" className="block text-sm font-medium text-gray-800 mb-1">
                         Precio de compra
                       </label>
-                      <div className="relative">
-                        <DollarSign size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <div>
                         <input
                             type="number"
                             id="purchasePrice"
@@ -1082,7 +949,7 @@ const Portfolio: React.FC = () => {
                                 purchasePrice: parseFloat(e.target.value.replace(',', '.')) || 0
                               }))
                             }
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                            className="w-full px-3 py-2 border border-gray-300"
                             step="any"
                             min="0"
                         />
@@ -1110,21 +977,20 @@ const Portfolio: React.FC = () => {
                           setSelectedAsset(null);
                           _setCurrentPrice(null);
                         }}
-                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-lg transition-colors"
+                        className="px-4 py-2 bg-black text-white"
                     >
                       Cancelar
                     </button>
                     <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors flex items-center"
+                        className="px-4 py-2 bg-black text-white font-semibold"
                     >
-                      {editId ? <Edit2 size={18} className="mr-2" /> : <Plus size={18} className="mr-2" />}
                       {editId ? "Guardar cambios" : "Agregar"}
                     </button>
                   </div>
                 </form>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
         )}
       </div>
     </>

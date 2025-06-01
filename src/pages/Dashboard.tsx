@@ -4,7 +4,6 @@ import type { ChartOptions } from 'chart.js';
 import { usePortfolioData } from '../hooks/usePortfolioData';
 // import { useSupabase } from '../contexts/SupabaseContext';
 // import { useAuth } from '../contexts/AuthContext';
-import { motion } from 'framer-motion';
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -18,7 +17,7 @@ import {
   ArcElement,
   Filler
 } from 'chart.js';
-import { ArrowUpRight, ArrowDownRight, DollarSign, TrendingUp, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import axios from 'axios';
 
 // Registrar componentes de ChartJS para habilitar gráficos de líneas y dona
@@ -48,23 +47,6 @@ interface CryptoQuote {
   variation: number;
 }
 
-// Definir emojis para representar cada tipo de cotización
-const dollarEmoji: Record<string, string> = {
-  Oficial: '💵',
-  Blue: '🔵',
-  Bolsa: '💹',
-  CCL: '📈',
-  Mayorista: '🏦',
-  Cripto: '🪙',
-  Tarjeta: '💳',
-};
-const cryptoEmoji: Record<string, string> = {
-  USDT: '🟢',
-  USDC: '🔵',
-  BTC: '🟠',
-  ETH: '🟣',
-  Inflación: '📊',
-};
 
 const Dashboard: React.FC = () => {
   // Obtener contexto de Supabase y usuario autenticado
@@ -250,9 +232,6 @@ const Dashboard: React.FC = () => {
       seriesCedearAdjusted = seriesCedear.map(val => val / cclRate);
       seriesAccionAdjusted = seriesAccion.map(val => val / cclRate);
     }
-    const seriesTotal = seriesCriptoAdjusted.map((_, idx) =>
-      seriesCriptoAdjusted[idx] + seriesCedearAdjusted[idx] + seriesAccionAdjusted[idx]
-    );
 
     // Definir colores para cada tipo de activo
     const colorMap = {
@@ -268,38 +247,26 @@ const Dashboard: React.FC = () => {
         {
           label: 'Cripto',
           data: seriesCriptoAdjusted,
-          fill: true,
-          backgroundColor: colorMap.Cripto.bg,
+          fill: false,
           borderColor: colorMap.Cripto.border,
+          borderWidth: 1,
           tension: 0.3,
         },
         {
           label: 'CEDEAR',
           data: seriesCedearAdjusted,
-          fill: true,
-          backgroundColor: colorMap.CEDEAR.bg,
+          fill: false,
           borderColor: colorMap.CEDEAR.border,
+          borderWidth: 1,
           tension: 0.3,
         },
         {
           label: 'Acción',
           data: seriesAccionAdjusted,
-          fill: true,
-          backgroundColor: colorMap.Acción.bg,
-          borderColor: colorMap.Acción.border,
-          tension: 0.3,
-        },
-        {
-          label: 'Total',
-          data: seriesTotal,
           fill: false,
-          borderColor: isDarkMode ? '#FFFFFF' : '#1E293B',
-          backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(30,41,59,0.1)',
-          borderWidth: 2,
-          pointRadius: 2,
+          borderColor: colorMap.Acción.border,
+          borderWidth: 1,
           tension: 0.3,
-          type: 'line',
-          borderDash: [5, 5],
         },
       ];
     } else {
@@ -313,9 +280,9 @@ const Dashboard: React.FC = () => {
         {
           label: typeFilter,
           data: selectedSeries,
-          fill: true,
-          backgroundColor: colorMap[typeFilter].bg,
+          fill: false,
           borderColor: colorMap[typeFilter].border,
+          borderWidth: 1,
           tension: 0.3,
         }
       ];
@@ -445,7 +412,7 @@ const Dashboard: React.FC = () => {
         }
       }
     },
-    cutout: '70%',
+    cutout: '50%',
   };
 
   // Formatear números como ARS
@@ -469,16 +436,12 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Encabezado del Dashboard con título y subtítulo */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
+      <div>
         <div className="flex items-center">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
         </div>
-        <p className="text-gray-600 dark:text-gray-300">Bienvenido a tu panel financiero</p>
-      </motion.div>
+        <p className="text-gray-600">Bienvenido a tu panel financiero</p>
+      </div>
 
       {/*
         Indicadores principales
@@ -488,128 +451,70 @@ const Dashboard: React.FC = () => {
       */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Invertido */}
-        <motion.div
-          className="bg-white dark:bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Total Invertido ({showInARS ? 'ARS' : 'USD'})
+        <div className="bg-white rounded p-5 border border-gray-100">
+          <div>
+            <p className="text-sm font-medium text-gray-500">
+              Total Invertido ({showInARS ? 'ARS' : 'USD'})
+            </p>
+            {loadingDashboard ? (
+              <div className="h-7 w-28 bg-gray-200 rounded mt-1"></div>
+            ) : (
+              <p className="text-xl font-bold text-gray-800 mt-1">
+                {showInARS ? formatARS(totalInvested) : formatUSD(totalInvested)}
               </p>
-              {loadingDashboard ? (
-                <div className="h-7 w-28 bg-gray-200 animate-pulse rounded mt-1"></div>
-              ) : (
-                <p className="text-xl font-bold text-gray-800 dark:text-gray-100 mt-1">
-                  {showInARS ? formatARS(totalInvested) : formatUSD(totalInvested)}
-                </p>
-              )}
-            </div>
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <DollarSign size={20} className="text-blue-600" />
-            </div>
+            )}
           </div>
-        </motion.div>
+        </div>
 
         {/* Valor Actual */}
-        <motion.div
-          className="bg-white dark:bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Valor Actual ({showInARS ? 'ARS' : 'USD'})
+        <div className="bg-white rounded p-5 border border-gray-100">
+          <div>
+            <p className="text-sm font-medium text-gray-500">
+              Valor Actual ({showInARS ? 'ARS' : 'USD'})
+            </p>
+            {loadingDashboard ? (
+              <div className="h-7 w-28 bg-gray-200 rounded mt-1"></div>
+            ) : (
+              <p className="text-xl font-bold text-gray-800 mt-1">
+                {showInARS ? formatARS(currentValue) : formatUSD(currentValue)}
               </p>
-              {loadingDashboard ? (
-                <div className="h-7 w-28 bg-gray-200 animate-pulse rounded mt-1"></div>
-              ) : (
-                <p className="text-xl font-bold text-gray-800 dark:text-gray-100 mt-1">
-                  {showInARS ? formatARS(currentValue) : formatUSD(currentValue)}
-                </p>
-              )}
-            </div>
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <TrendingUp size={20} className="text-purple-600" />
-            </div>
+            )}
           </div>
-        </motion.div>
+        </div>
 
         {/* Ganancia/Pérdida */}
-        <motion.div
-          className="bg-white dark:bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Ganancia/Pérdida ({showInARS ? 'ARS' : 'USD'})
-              </p>
-              {loadingDashboard ? (
-                <div className="h-7 w-28 bg-gray-200 animate-pulse rounded mt-1"></div>
-              ) : (
-                <div className="flex items-center mt-1">
-                  <p className={`text-xl font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'} dark:text-gray-100`}>
-                    {showInARS ? formatARS(profit) : formatUSD(profit)}
-                  </p>
-                  {profit >= 0 ? (
-                    <ArrowUpRight size={18} className="ml-1 text-green-600" />
-                  ) : (
-                    <ArrowDownRight size={18} className="ml-1 text-red-600" />
-                  )}
-                </div>
-              )}
-            </div>
-            <div className={`p-2 rounded-lg ${profit >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-              {profit >= 0 ? (
-                <ArrowUpRight size={20} className="text-green-600" />
-              ) : (
-                <ArrowDownRight size={20} className="text-red-600" />
-              )}
-            </div>
+        <div className="bg-white rounded p-5 border border-gray-100">
+          <div>
+            <p className="text-sm font-medium text-gray-500">
+              Ganancia/Pérdida ({showInARS ? 'ARS' : 'USD'})
+            </p>
+            {loadingDashboard ? (
+              <div className="h-7 w-28 bg-gray-200 rounded mt-1"></div>
+            ) : (
+              <div className="flex items-center mt-1">
+                <p className={`text-xl font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {showInARS ? formatARS(profit) : formatUSD(profit)}
+                </p>
+              </div>
+            )}
           </div>
-        </motion.div>
+        </div>
 
         {/* Rendimiento */}
-        <motion.div
-          className="bg-white dark:bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Rendimiento</p>
-              {loadingDashboard ? (
-                <div className="h-7 w-28 bg-gray-200 animate-pulse rounded mt-1"></div>
-              ) : (
-                <div className="flex items-center mt-1">
-                  <p className={`text-xl font-bold ${profitPercentage >= 0 ? 'text-green-600' : 'text-red-600'} dark:text-gray-100`}>
-                    {profitPercentage.toFixed(2)}%
-                  </p>
-                  {profitPercentage >= 0 ? (
-                    <ArrowUpRight size={18} className="ml-1 text-green-600" />
-                  ) : (
-                    <ArrowDownRight size={18} className="ml-1 text-red-600" />
-                  )}
-                </div>
-              )}
-            </div>
-            <div className={`p-2 rounded-lg ${profitPercentage >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-              {profitPercentage >= 0 ? (
-                <ArrowUpRight size={20} className="text-green-600" />
-              ) : (
-                <ArrowDownRight size={20} className="text-red-600" />
-              )}
-            </div>
+        <div className="bg-white rounded p-5 border border-gray-100">
+          <div>
+            <p className="text-sm font-medium text-gray-500">Rendimiento</p>
+            {loadingDashboard ? (
+              <div className="h-7 w-28 bg-gray-200 rounded mt-1"></div>
+            ) : (
+              <div className="flex items-center mt-1">
+                <p className={`text-xl font-bold ${profitPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {profitPercentage.toFixed(2)}%
+                </p>
+              </div>
+            )}
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Mostrar mensaje de error si ocurre al cargar datos del Dashboard */}
@@ -621,102 +526,75 @@ const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Evolución del Capital con gráfico de líneas */}
-        <motion.div
-          className="lg:col-span-2 bg-white dark:bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-        >
+        <div className="lg:col-span-2 bg-white rounded p-5 border border-gray-100">
           {/* Seleccionar rango de tiempo para el gráfico */}
           <div className="mb-4 flex flex-wrap justify-between items-center gap-4">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Evolución del Capital</h2>
-            <div className="flex gap-2 text-sm">
-              {['All','1M','3M','6M','YTD','1Y'].map(label => (
-                <button
-                  key={label}
-                  onClick={() => setSelectedRange(label as 'All' | '1M' | '3M' | '6M' | 'YTD' | '1Y')}
-                  className={`px-3 py-1 rounded border ${
-                    selectedRange === label
-                      ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold'
-                      : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-200'
-                  } hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors`}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="flex gap-2 text-sm items-center">
+              <label className="mr-1" htmlFor="range-select">Rango:</label>
+              <select
+                id="range-select"
+                value={selectedRange}
+                onChange={e => setSelectedRange(e.target.value as 'All' | '1M' | '3M' | '6M' | 'YTD' | '1Y')}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              >
+                <option value="All">All</option>
+                <option value="1M">1M</option>
+                <option value="3M">3M</option>
+                <option value="6M">6M</option>
+                <option value="YTD">YTD</option>
+                <option value="1Y">1Y</option>
+              </select>
+              <label className="ml-4 mr-1" htmlFor="type-filter-select">Tipo:</label>
+              <select
+                id="type-filter-select"
+                value={typeFilter}
+                onChange={e => setTypeFilter(e.target.value as 'Todos'|'Cripto'|'CEDEAR'|'Acción')}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              >
+                <option value="Todos">Todos</option>
+                <option value="Acción">Acciones</option>
+                <option value="CEDEAR">CEDEARs</option>
+                <option value="Cripto">Criptomonedas</option>
+              </select>
+              <label className="ml-4 flex items-center gap-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showInARS}
+                  onChange={e => setShowInARS(e.target.checked)}
+                  className="accent-green-600"
+                />
+                Ver en ARS
+              </label>
             </div>
           </div>
           <div className="min-h-[18rem] sm:min-h-[20rem] md:min-h-[22rem]">
             <Line data={capitalData} options={lineOptions} />
           </div>
-          {/* Leyenda interactiva para filtrar tipo de activo */}
-          <div className="mt-4 flex items-center justify-center gap-4 text-sm">
-            {['Todos','Acción','CEDEAR','Cripto'].map(label => {
-              let display = label === 'Acción' ? 'Acciones'
-                          : label === 'CEDEAR' ? 'CEDEARs'
-                          : label === 'Cripto' ? 'Criptomonedas'
-                          : 'Todos';
-              return (
-                <button
-                  key={label}
-                  onClick={() => setTypeFilter(label as 'Todos'|'Cripto'|'CEDEAR'|'Acción')}
-                  className={`
-                    px-2 py-1 rounded text-sm transition
-                    ${
-                      typeFilter === label
-                        ? label === 'Cripto'
-                          ? 'bg-orange-100 text-orange-600 font-semibold'
-                          : label === 'CEDEAR'
-                          ? 'bg-purple-100 text-purple-600 font-semibold'
-                          : label === 'Acción'
-                          ? 'bg-sky-100 text-sky-600 font-semibold'
-                          : 'bg-gray-200 text-gray-900 font-semibold'
-                        : label === 'Cripto'
-                        ? 'text-orange-600 hover:bg-orange-50'
-                        : label === 'CEDEAR'
-                        ? 'text-purple-600 hover:bg-purple-50'
-                        : label === 'Acción'
-                        ? 'text-sky-600 hover:bg-sky-50'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }
-                  `}
-                >
-                  {display}
-                </button>
-              );
-            })}
-          </div>
-        </motion.div>
+        </div>
 
         {/* Distribución del Portafolio con gráfico de dona */}
-        <motion.div
-          className="bg-white dark:bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
+        <div className="bg-white rounded p-5 border border-gray-100">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Distribución del Portfolio</h2>
-            <button
-              onClick={() => setShowInARS(prev => !prev)}
-              className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition-colors ${
-                showInARS
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-[#0EA5E9] text-white hover:bg-[#0284c7]'
-              }`}
-            >
-              <DollarSign size={14} className="text-white" />
-              Ver en {showInARS ? 'USD' : 'ARS'}
-            </button>
+            <h2 className="text-lg font-semibold text-gray-800">Distribución del Portfolio</h2>
           </div>
           <div className="flex flex-col items-center justify-center h-full py-6">
             <div className="w-full flex justify-center">
               <div className="h-64 w-64">
-                <Doughnut data={distributionData} options={doughnutOptions} />
+                <Doughnut data={{
+                  ...distributionData,
+                  datasets: [
+                    {
+                      ...distributionData.datasets[0],
+                      // Quitar borderColor
+                      borderColor: undefined,
+                    }
+                  ]
+                }} options={doughnutOptions} />
               </div>
             </div>
             {/* Leyenda personalizada para mostrar porcentaje por tipo */}
-            <div className="mt-6 text-sm text-gray-700 dark:text-gray-300">
+            <div className="mt-6 text-sm text-gray-700">
               <ul className="flex flex-col items-center gap-2">
                 {distributionData.labels.map((label, i) => {
                   const value = distributionData.datasets[0].data[i];
@@ -726,34 +604,31 @@ const Dashboard: React.FC = () => {
                   return (
                     <li
                       key={i}
-                      className="flex items-center gap-2 whitespace-nowrap px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 w-fit"
+                      className="flex items-center gap-2 whitespace-nowrap px-2 py-1 rounded-md bg-gray-100 w-fit"
                     >
                       <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: color }}></span>
                       <span className="font-medium">{label}</span>
-                      <span className="text-gray-500 dark:text-gray-400">({percent}%)</span>
+                      <span className="text-gray-500">({percent}%)</span>
                     </li>
                   );
                 })}
               </ul>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Datos de mercado: cotizaciones de dólar y cripto */}
       <div className="grid grid-cols-1 gap-6">
         {/* Cotizaciones del Dólar */}
-        <motion.div
-          className="bg-white dark:bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+        <div
+          className="bg-white rounded p-5 border border-gray-100"
         >
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Cotizaciones del Dólar</h2>
+            <h2 className="text-lg font-semibold text-gray-800">Cotizaciones del Dólar</h2>
             <a
               href="/analysis?section=dolar"
-              className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300 transition"
+              className="inline-flex items-center gap-1 text-sm font-medium text-blue-600"
             >
               Ver más
               <ExternalLink size={14} strokeWidth={1.5} />
@@ -761,26 +636,24 @@ const Dashboard: React.FC = () => {
           </div>
           {loadingQuotes ? (
             <div className="text-center py-10">
-              <p className="text-gray-500 dark:text-gray-400">Cargando datos...</p>
+              <p className="text-gray-500">Cargando datos...</p>
             </div>
           ) : dollarQuotes.length > 0 ? (
             <div className="grid grid-cols-7 gap-3 justify-center">
               {dollarQuotes.map((quote, index) => (
                 <div
                   key={index}
-                  className="w-full bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2"
+                  className="w-full bg-white rounded border p-4"
                 >
-                  <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-center">
-                    {dollarEmoji[quote.name] || ''} {quote.name}
-                  </h3>
+                  <h3>{quote.name}</h3>
                   <div className="grid grid-cols-2 gap-4 justify-items-center">
                     <div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 text-center">Venta</div>
-                      <div className="font-medium text-gray-800 dark:text-gray-100">{formatARS(quote.sell)}</div>
+                      <div className="text-xs text-gray-500">Venta</div>
+                      <div className="font-medium text-black">{formatARS(quote.sell)}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 text-center">Compra</div>
-                      <div className="font-medium text-gray-800 dark:text-gray-100">{formatARS(quote.buy)}</div>
+                      <div className="text-xs text-gray-500">Compra</div>
+                      <div className="font-medium text-black">{formatARS(quote.buy)}</div>
                     </div>
                   </div>
                 </div>
@@ -788,23 +661,20 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-10">
-              <p className="text-gray-500 dark:text-gray-400">No hay datos disponibles</p>
+              <p className="text-gray-500">No hay datos disponibles</p>
             </div>
           )}
-        </motion.div>
+        </div>
 
         {/* Cotizaciones Cripto */}
-        <motion.div
-          className="bg-white dark:bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
+        <div
+          className="bg-white rounded p-5 border border-gray-100"
         >
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Cotizaciones Cripto</h2>
+            <h2 className="text-lg font-semibold text-gray-800">Cotizaciones Cripto</h2>
             <a
               href="/analysis?section=cripto"
-              className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300 transition"
+              className="inline-flex items-center gap-1 text-sm font-medium text-blue-600"
             >
               Ver más
               <ExternalLink size={14} strokeWidth={1.5} />
@@ -812,7 +682,7 @@ const Dashboard: React.FC = () => {
           </div>
           {loadingQuotes ? (
             <div className="text-center py-10">
-              <p className="text-gray-500 dark:text-gray-400">Cargando datos...</p>
+              <p className="text-gray-500">Cargando datos...</p>
             </div>
           ) : cryptoQuotes.length > 0 ? (
             <div className="grid grid-cols-5 gap-3 justify-center">
@@ -821,55 +691,48 @@ const Dashboard: React.FC = () => {
                 .map((quote, index) => (
                   <div
                     key={index}
-                    className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2"
+                    className="bg-white rounded border p-4"
                   >
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-center">
-                      {cryptoEmoji[quote.name] || ''} {quote.name}
-                    </h3>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 text-center">
+                    <h3>{quote.name}</h3>
+                    <div className="text-xs text-gray-500 mb-2">
                       {['USDT','USDC'].includes(quote.name) ? 'Moneda estable' : 'Criptomoneda'}
                     </div>
                     <div className="grid grid-cols-2 gap-4 justify-items-center">
                       <div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                        <div className="text-xs text-gray-500">
                           {['BTC','ETH'].includes(quote.name) ? 'Precio (USD)' : 'Precio (ARS)'}
                         </div>
-                        <div className="font-medium text-gray-800 dark:text-gray-100 text-center">
+                        <div className="font-medium text-black">
                           {['BTC','ETH'].includes(quote.name) ? formatUSD(quote.price) : formatARS(quote.price)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">Variación 24h</div>
-                        <div className={`text-sm font-medium text-center ${quote.variation >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <div className="text-xs text-gray-500">Variación 24h</div>
+                        <div className={`text-sm font-medium ${quote.variation >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {quote.variation >= 0 ? '+' : ''}{quote.variation.toFixed(2)}%
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
-              {/* Mostrar inflación mensual */}
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 space-y-2 border-l-4 border-orange-400 text-center">
-                <h3 className="text-sm font-medium text-gray-800 dark:text-gray-100">
-                  {cryptoEmoji['Inflación']} Inflación mensual
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Fuente: INDEC</p>
+              {/* Inflación mensual simplificada */}
+              <div className="bg-white border p-4 text-center">
+                <p className="text-sm text-gray-600">Inflación mensual esperada</p>
                 {inflationError ? (
-                  <p className="text-base text-red-500">Datos no disponibles</p>
+                  <p className="text-base text-red-500">Sin datos</p>
                 ) : lastInflation !== null ? (
-                  <p className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                    {lastInflation.toFixed(2)}%
-                  </p>
+                  <p className="text-xl font-bold text-black">{lastInflation.toFixed(2)}%</p>
                 ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Cargando...</p>
+                  <p className="text-sm text-gray-500">Cargando...</p>
                 )}
               </div>
             </div>
           ) : (
             <div className="text-center py-10">
-              <p className="text-gray-500 dark:text-gray-400">No hay datos disponibles</p>
+              <p className="text-gray-500">No hay datos disponibles</p>
             </div>
           )}
-        </motion.div>
+        </div>
       </div>
     </div>
   );
