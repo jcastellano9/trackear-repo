@@ -431,7 +431,7 @@ const Analysis: React.FC = () => {
     <div className="flex space-x-2 mb-0">
       <button
         onClick={() => setActiveMainSection('quotes')}
-        className={`px-4 py-2 rounded-lg border ${
+        className={`px-4 py-2 rounded-none border ${
           activeMainSection === 'quotes'
             ? 'bg-black text-white'
             : 'bg-gray-100 text-black'
@@ -441,7 +441,7 @@ const Analysis: React.FC = () => {
       </button>
       <button
         onClick={() => setActiveMainSection('rates')}
-        className={`px-4 py-2 rounded-lg border ${
+        className={`px-4 py-2 rounded-none border ${
           activeMainSection === 'rates'
             ? 'bg-black text-white'
             : 'bg-gray-100 text-black'
@@ -457,7 +457,7 @@ const Analysis: React.FC = () => {
     <div className="flex space-x-2 mb-2">
       <button
         onClick={() => setActiveQuoteSection('dollar')}
-        className={`px-4 py-1.5 rounded-lg border ${
+        className={`px-4 py-1.5 rounded-none border ${
           activeQuoteSection === 'dollar'
             ? 'bg-black text-white'
             : 'bg-gray-100 text-black'
@@ -467,7 +467,7 @@ const Analysis: React.FC = () => {
       </button>
       <button
         onClick={() => setActiveQuoteSection('crypto')}
-        className={`px-4 py-1.5 rounded-lg border ${
+        className={`px-4 py-1.5 rounded-none border ${
           activeQuoteSection === 'crypto'
             ? 'bg-black text-white'
             : 'bg-gray-100 text-black'
@@ -477,7 +477,7 @@ const Analysis: React.FC = () => {
       </button>
       <button
         onClick={() => setActiveQuoteSection('pix')}
-        className={`px-4 py-1.5 rounded-lg border ${
+        className={`px-4 py-1.5 rounded-none border ${
           activeQuoteSection === 'pix'
             ? 'bg-black text-white'
             : 'bg-gray-100 text-black'
@@ -600,7 +600,7 @@ return (
                 <select
                   value={selectedCurrency}
                   onChange={e => setSelectedCurrency(e.target.value as any)}
-                  className="bg-white text-black border rounded px-3 py-1.5 text-sm"
+                  className="bg-white text-black border rounded-none px-3 py-1.5 text-sm"
                 >
                   <option value="USD">USD</option>
                   <option value="Bancos">Bancos</option>
@@ -613,7 +613,7 @@ return (
                 <select
                   value={selectedToken || ''}
                   onChange={e => setSelectedToken(e.target.value || null)}
-                  className="bg-white text-black border rounded px-3 py-1.5 text-sm"
+                  className="bg-white text-black border rounded-none px-3 py-1.5 text-sm"
                 >
                   <option value="">Todas</option>
                   <option value="USDT">USDT</option>
@@ -630,7 +630,7 @@ return (
                   <select
                     value={selectedPixSymbol || ''}
                     onChange={e => setSelectedPixSymbol(e.target.value ? e.target.value as 'ARS' | 'USD' : null)}
-                    className="bg-white text-black border rounded px-3 py-1.5 text-sm"
+                    className="bg-white text-black border rounded-none px-3 py-1.5 text-sm"
                   >
                     {uniquePixSymbols.map(symbol => (
                       <option key={symbol} value={symbol}>{symbol}</option>
@@ -650,7 +650,7 @@ return (
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value as any)}
-                  className="bg-white text-black border rounded px-4 py-1.5 text-sm w-60"
+                  className="bg-white text-black border rounded-none px-4 py-1.5 text-sm w-60"
                 >
                   {activeQuoteSection === 'pix' ? (
                     <>
@@ -701,17 +701,17 @@ return (
             return (
               <div className="mb-6">
                 <div className="flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2">
+                  <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded-none px-3 py-2">
                     <span className="font-semibold">Mejor para vender:</span>
                     <span>{bestBuy.name}</span>
                     <span className="font-semibold">{formatCurrency(bestBuy.buy || 0)}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2">
+                  <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded-none px-3 py-2">
                     <span className="font-semibold">Mejor para comprar:</span>
                     <span>{bestSell.name}</span>
                     <span className="font-semibold">{formatCurrency(bestSell.sell || 0)}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2">
+                  <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded-none px-3 py-2">
                     <span className="font-semibold">Menor Spread:</span>
                     <span>{bestSpread.name}</span>
                     <span className="font-semibold">{formatCurrency(bestSpread.spread || 0)}</span>
@@ -780,7 +780,7 @@ return (
                     return (
                       <div className="mb-6 flex flex-wrap gap-4">
                         {bestQuote && (
-                          <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2 w-fit">
+                          <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded-none px-3 py-2 w-fit">
                             <span className="font-semibold">Mejor App:</span>
                             <span>{bestQuote.name.split('—')[0].trim()}</span>
                             <span className="font-semibold">
@@ -792,7 +792,7 @@ return (
                           </div>
                         )}
                         {tarjetaMepQuote && (
-                          <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2 w-fit">
+                          <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded-none px-3 py-2 w-fit">
                             <span className="font-semibold">Tarjeta + MEP:</span>
                             <span className="font-semibold">
                               {selectedPixSymbol === 'USD' && tarjetaMepQuote.buy
@@ -803,7 +803,7 @@ return (
                           </div>
                         )}
                         {tarjetaQuote && (
-                          <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded px-3 py-2 w-fit">
+                          <div className="flex items-center gap-2 text-sm bg-gray-100 border rounded-none px-3 py-2 w-fit">
                             <span className="font-semibold">Dólar Tarjeta:</span>
                             <span className="font-semibold">
                               {selectedPixSymbol === 'USD' && tarjetaQuote.buy

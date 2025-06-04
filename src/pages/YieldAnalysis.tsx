@@ -221,7 +221,6 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-gray-800 dark:text-gray-100">Billeteras</h3>
-                <span className="text-gray-500 text-sm font-medium">Simular rendimiento</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {sortedBilleteras.map((b, i) => {
@@ -276,7 +275,6 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-gray-800 dark:text-gray-100">Criptomonedas</h3>
-                <span className="text-gray-500 text-sm font-medium">Simular rendimiento</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="table-auto w-full text-sm rounded bg-white divide-y divide-gray-200">

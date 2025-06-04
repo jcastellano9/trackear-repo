@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 // import { Combobox } from '@headlessui/react';
-import { Calculator, AlertCircle, Check } from 'lucide-react';
+import { AlertCircle, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 
@@ -453,28 +453,10 @@ const Simulator: React.FC = () => {
                   onClick={calculateInstallmentComparison}
                   className="w-full py-2.5 px-5 text-base font-medium bg-gray-800 text-white flex items-center justify-center"
                 >
-                  <Calculator size={18} className="mr-2" />
                   Comparar
                 </button>
-                {installmentResult && (
-                  <div className="mt-6 p-4 text-sm text-left font-normal bg-white border border-gray-300 text-gray-800">
-                    <p className="font-medium mb-1">
-                      Recomendación: {installmentResult.suggestion === 'Cuotas' ? '💳 Cuotas' : '💵 Contado'}
-                    </p>
-                    <p className="text-sm">
-                      {installmentResult.suggestion === 'Cuotas'
-                        ? 'La suma de las cuotas ajustadas por inflación es menor al valor de contado.'
-                        : 'El valor actualizado de las cuotas es mayor al precio de contado considerando la inflación estimada.'}
-                    </p>
-                    {monthlyInflation !== null && (
-                      <p className="mt-2 text-xs text-gray-800">
-                        Inflación mensual esperada según BCRA: {monthlyInflation.toFixed(2)}% (~{((Math.pow(1 + (monthlyInflation / 100), 12) - 1) * 100).toFixed(2)}% anual)
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
-              <div className="space-y-6 bg-white border border-gray-200 p-6 h-full">
+              <div className="space-y-6 h-full">
                 {error && (
                   <div className="p-3 bg-white border border-red-200 flex items-center text-red-700">
                     <AlertCircle size={18} className="mr-2 flex-shrink-0" />
@@ -482,70 +464,90 @@ const Simulator: React.FC = () => {
                   </div>
                 )}
                 {installmentResult && (
-                  <>
-                    <div className="p-4 bg-white border border-gray-200 space-y-4">
-                      <p className="text-sm font-medium text-gray-800 mb-1">
-                        Análisis de cuotas
-                      </p>
-                      {/* Cuotas ajustadas por inflación acumulada - PRIMERO */}
-                      {installmentResult.adjustedInstallments && (
-                        <div className="mb-4">
-                          <h4 className="font-medium text-gray-800 mb-2">Cuotas ajustadas por inflación acumulada</h4>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm text-gray-800">
-                            {installmentResult.adjustedInstallments.map((v, i) => (
-                              <div key={i} className="bg-white border border-gray-200 px-2 py-1">
-                                Cuota #{i + 1}: ${v.toFixed(0)}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                  <div>
+                    {/* Encabezado de sugerencia */}
+                    <div>
+                      {installmentResult.suggestion === 'Cuotas' ? (
+                        <span className="text-lg font-bold flex items-center gap-2 text-blue-600">
+                          💳 Conviene: Cuotas
+                        </span>
+                      ) : (
+                        <span className="text-lg font-bold flex items-center gap-2 text-yellow-700">
+                          💵 Conviene: Contado
+                        </span>
                       )}
-                      {/* Total financiado */}
-                      <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                        <span className="text-sm text-gray-800">Total financiado:</span>
-                        <span className="font-medium text-gray-800 text-sm">
-                          {formatCurrency(installmentResult.totalFinanced)}
-                        </span>
+                    </div>
+                    {/* Fila de métricas principales */}
+                    <div className="flex gap-8 items-end mb-2 mt-4">
+                      <div>
+                        <div className="text-xl font-bold text-gray-700">Costo total financiado</div>
+                        <div className="text-xl font-bold text-gray-800">{formatCurrency(installmentResult.totalFinanced)}</div>
                       </div>
-                      {/* CFT anual efectivo */}
-                      <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                        <span className="text-sm text-gray-800">
-                          Costo Financiero Total (CFT anual efectivo)
-                        </span>
-                        <span className="font-medium text-gray-800 text-sm">
+                      <div>
+                        <div className="text-xl font-bold text-gray-700">CFT anual efectivo</div>
+                        <div
+                          className={`text-xl font-bold ${
+                            installmentResult.cft > 0
+                              ? 'text-green-600'
+                              : installmentResult.cft < 0
+                              ? 'text-red-600'
+                              : 'text-gray-800'
+                          }`}
+                        >
                           {installmentResult.cft.toFixed(2)}%
-                        </span>
+                        </div>
                       </div>
-                      {/* Explicación CFT */}
-                      <div className="mt-2 text-xs text-gray-800">
-                        El CFT anual efectivo refleja el costo total del financiamiento. Se calcula como la tasa anual compuesta que iguala el valor de las cuotas al precio contado. Si da negativo o 0%, puede deberse a montos inconsistentes.
-                      </div>
-                      {/* Inflación mensual estimada */}
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-800">Inflación mensual estimada:</span>
-                        <span className="font-medium text-gray-800 text-sm">
+                      <div>
+                        <div className="text-xl font-bold text-gray-700">Inflación estimada</div>
+                        <div className="text-xl font-bold text-gray-800">
                           {installmentResult.inflationRate.toFixed(2)}%
-                        </span>
+                        </div>
                       </div>
                     </div>
-                    {/* Simulación alternativa */}
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 bg-white border border-gray-200">
-                        <p className="text-gray-800 font-medium mb-1">FCI (billetera promedio):</p>
-                        <p className="text-gray-800 font-medium text-base">{formatCurrency(installmentResult.fciProjection)}</p>
-                        <p className="text-xs text-gray-800 mt-1">TNA estimada: {walletRates.length
-                          ? (walletRates.reduce((sum, r) => sum + r.rate, 0) / walletRates.length).toFixed(2)
-                          : '30.00'}%</p>
-                      </div>
-                      <div className="p-4 bg-white border border-gray-200">
-                        <p className="text-gray-800 font-medium mb-1">Plazo Fijo promedio:</p>
-                        <p className="text-gray-800 font-medium text-base">{formatCurrency(installmentResult.pfProjection)}</p>
-                        <p className="text-xs text-gray-800 mt-1">TNA estimada: {bankRates.length
-                          ? (bankRates.reduce((sum, r) => sum + r.rate, 0) / bankRates.length).toFixed(2)
-                          : '35.00'}%</p>
+                    {/* Cuotas ajustadas por inflación */}
+                    <div className="mb-2">
+                      <div className="text-sm font-medium text-gray-700 mb-1">Cuotas ajustadas:</div>
+                      <div className="flex flex-wrap">
+                        {installmentResult.adjustedInstallments.map((v, i) => (
+                          <span
+                            key={i}
+                            className="inline-block bg-gray-100 px-2 py-1 mr-1 mb-1 rounded-none text-sm text-gray-800 border border-gray-200"
+                          >
+                            #{i + 1}: ${v.toFixed(0)}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                  </>
+                    {/* Mini-dashboard FCI y Plazo Fijo */}
+                    <div className="flex gap-2 mt-4 flex-wrap">
+                      <div className="inline-block bg-gray-100 px-4 py-2 rounded-none border border-gray-200 mr-4 mb-2 align-top">
+                        <div className="font-bold text-base text-gray-800">{formatCurrency(installmentResult.fciProjection)}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          FCI (billetera promedio)
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          TNA: {walletRates.length
+                            ? (walletRates.reduce((sum, r) => sum + r.rate, 0) / walletRates.length).toFixed(2)
+                            : '30.00'}%
+                        </div>
+                      </div>
+                      <div className="inline-block bg-gray-100 px-4 py-2 rounded-none border border-gray-200 mr-4 mb-2 align-top">
+                        <div className="font-bold text-base text-gray-800">{formatCurrency(installmentResult.pfProjection)}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          Plazo Fijo promedio
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          TNA: {bankRates.length
+                            ? (bankRates.reduce((sum, r) => sum + r.rate, 0) / bankRates.length).toFixed(2)
+                            : '35.00'}%
+                        </div>
+                      </div>
+                    </div>
+                    {/* Explicación corta */}
+                    <div className="mt-3 text-xs text-gray-500 flex items-center gap-2">
+                      ⚠️ El CFT refleja el costo total anual de financiarse. Si es negativo, las cuotas ajustadas valen menos que el contado.
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -641,7 +643,6 @@ const Simulator: React.FC = () => {
                 onClick={calculateResults}
                 className="w-full py-2.5 px-5 text-base font-medium bg-gray-800 text-white flex items-center justify-center"
               >
-                <Calculator size={18} className="mr-2" />
                 Calcular
               </button>
             </div>
@@ -830,12 +831,30 @@ const Simulator: React.FC = () => {
                           {result.finalAmount.toFixed(6)} {selectedCrypto}
                         </p>
                       ) : (
-                        <p className="text-base font-medium text-gray-800">{formatCurrency(result.finalAmount)}</p>
+                        <p
+                          className={`text-base font-medium ${
+                            result.finalAmount > parseFloat(amount)
+                              ? 'text-green-600'
+                              : result.finalAmount < parseFloat(amount)
+                              ? 'text-red-600'
+                              : 'text-gray-800'
+                          }`}
+                        >
+                          {formatCurrency(result.finalAmount)}
+                        </p>
                       )}
                     </div>
                     <div className="bg-white rounded p-3 text-center border border-gray-200">
                       <p className="text-gray-800 mb-1">Interés ganado</p>
-                      <p className="text-base font-medium text-gray-800">
+                      <p
+                        className={`text-base font-medium ${
+                          result.interest > 0
+                            ? 'text-green-600'
+                            : result.interest < 0
+                            ? 'text-red-600'
+                            : 'text-gray-800'
+                        }`}
+                      >
                         {simulationType === 'crypto'
                           ? `${result.interest.toFixed(8)} ${selectedCrypto}`
                           : formatCurrency(result.interest)}
@@ -843,7 +862,15 @@ const Simulator: React.FC = () => {
                     </div>
                     <div className="bg-white rounded p-3 text-center border border-gray-200">
                       <p className="text-gray-800 mb-1">TEA</p>
-                      <p className="text-base font-medium text-gray-800">
+                      <p
+                        className={`text-base font-medium ${
+                          result.effectiveRate > 0
+                            ? 'text-green-600'
+                            : result.effectiveRate < 0
+                            ? 'text-red-600'
+                            : 'text-gray-800'
+                        }`}
+                      >
                         {result.effectiveRate.toFixed(2)}%
                       </p>
                     </div>

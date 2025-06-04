@@ -133,7 +133,7 @@ const Profile: React.FC = () => {
       <div className="space-y-6 lg:space-y-0 lg:flex lg:space-x-6">
         {/* Sección: Información de la Cuenta (correo y fecha de registro) */}
         <div className="lg:w-1/3">
-          <div className="bg-white rounded border border-gray-100 p-6">
+          <div className="bg-white rounded-none border border-gray-100 p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-black">Información de la Cuenta</h2>
             </div>
@@ -164,7 +164,7 @@ const Profile: React.FC = () => {
         </div>
         {/* Sección: Foto de perfil generada a partir del email */}
         <div className="lg:w-1/3">
-          <div className="bg-white rounded border border-gray-100 p-6 text-center">
+          <div className="bg-white rounded-none border border-gray-100 p-6 text-center">
             <div className="flex flex-col items-center">
               <img
                 src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.email || 'User'}`}
@@ -178,7 +178,7 @@ const Profile: React.FC = () => {
         </div>
         {/* Sección: Acciones Rápidas (botones para cambiar contraseña y cerrar sesión) */}
         <div className="lg:w-1/3">
-          <div className="bg-white rounded border border-gray-100 p-6">
+          <div className="bg-white rounded-none border border-gray-100 p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-black">Acciones Rápidas</h2>
             </div>
@@ -186,13 +186,13 @@ const Profile: React.FC = () => {
               <button
                 ref={changePasswordButtonRef}
                 onClick={() => setIsChangingPassword(true)}
-                className="w-full px-4 py-2 bg-gray-50 hover:bg-gray-100 text-black rounded transition"
+                className="w-full px-4 py-2 bg-gray-50 hover:bg-gray-100 text-black rounded-none transition focus:outline-none focus:ring-0"
               >
                 Cambiar contraseña
               </button>
               <button
                 onClick={handleLogout}
-                className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded transition"
+                className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-none transition focus:outline-none focus:ring-0"
               >
                 Cerrar sesión
               </button>
@@ -209,18 +209,18 @@ const Profile: React.FC = () => {
           aria-labelledby="change-password-title"
           className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50"
         >
-          <div className="bg-white rounded p-6 max-w-md w-full border border-gray-100">
+          <div className="bg-white rounded-none p-6 max-w-md w-full border border-gray-100">
             {/* Título del modal: "Cambiar Contraseña" */}
             <h3 id="change-password-title" className="text-xl font-semibold text-black mb-4">Cambiar Contraseña</h3>
 
             {/* Mensajes de validación: Muestra errores o confirmación de éxito */}
             {error && (
-              <div className="mb-4 p-3 bg-gray-100 rounded text-gray-700">
+              <div className="mb-4 p-3 bg-gray-100 rounded-none text-gray-700">
                 {error}
               </div>
             )}
             {success && (
-              <div className="mb-4 p-3 bg-gray-100 rounded text-gray-700">
+              <div className="mb-4 p-3 bg-gray-100 rounded-none text-gray-700">
                 {success}
               </div>
             )}

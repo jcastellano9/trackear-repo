@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { KeyRound, CheckCircle2 } from 'lucide-react';
 
 const ResetPassword: React.FC = () => {
   const { resetPassword } = useAuth();
@@ -62,55 +61,57 @@ const ResetPassword: React.FC = () => {
 
           {success ? (
             <div className="text-center">
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-center text-green-700 dark:bg-green-900 dark:border-green-600 dark:text-green-200">
-                <CheckCircle2 size={24} className="mr-2 flex-shrink-0" />
-                <span>Se ha enviado un enlace de recuperación a su correo electrónico.</span>
+              <div className="mb-4 text-green-700 text-base font-semibold">
+                Se ha enviado un enlace de recuperación a su correo electrónico.
               </div>
-              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-4">Revise su bandeja de entrada y siga las instrucciones para restablecer su contraseña.</p>
+              <p className="text-gray-700 text-sm mb-6">
+                Revise su bandeja de entrada y siga las instrucciones para restablecer su contraseña.
+              </p>
               <Link
                 to="/login"
-                className="inline-block w-full text-center py-2.5 px-6 rounded-lg bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-medium transition-all duration-200 ease-in-out"
+                className="inline-block w-full text-center py-2.5 px-6 bg-black hover:bg-neutral-800 text-white rounded-none font-medium transition-all duration-200"
               >
                 Volver al inicio de sesión
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                    Correo electrónico
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:placeholder-gray-400 transition-all duration-200 ease-in-out"
-                    placeholder="correo@ejemplo.com"
-                  />
-                </div>
+            <>
+              <form onSubmit={handleSubmit}>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                      Correo electrónico
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:placeholder-gray-400 transition-all duration-200 ease-in-out"
+                      placeholder="correo@ejemplo.com"
+                    />
+                  </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full flex justify-center items-center py-2.5 px-4 border border-black text-white ${
-                    loading
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-black hover:bg-neutral-800'
-                  } font-medium transition-all duration-200`}
-                >
-                  {loading ? (
-                    <span className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></span>
-                  ) : (
-                    <>
-                      <KeyRound size={18} className="mr-2" />
-                      Enviar enlace de recuperación
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full flex justify-center items-center py-2.5 px-4 border border-black text-white ${
+                      loading
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-black hover:bg-neutral-800'
+                    } font-medium transition-all duration-200`}
+                  >
+                    Enviar enlace de recuperación
+                  </button>
+                </div>
+              </form>
+              <Link
+                to="/login"
+                className="block mt-6 text-center text-black font-medium hover:underline"
+              >
+                Volver al inicio
+              </Link>
+            </>
           )}
         </div>
       </motion.div>

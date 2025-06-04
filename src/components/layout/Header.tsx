@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { LayoutDashboard, Briefcase, BarChart, Calculator, User, Menu, X, Sun, Moon, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Header: React.FC = () => {
@@ -26,11 +25,11 @@ const Header: React.FC = () => {
 
   // navItems: rutas, etiquetas e íconos para la navegación
   const navItems = [
-    { path: '/', label: 'Inicio', icon: <LayoutDashboard size={20} /> },
-    { path: '/portfolio', label: 'Portfolio', icon: <Briefcase size={20} /> },
-    { path: '/analysis', label: 'Análisis', icon: <BarChart size={20} /> },
-    { path: '/simulator', label: 'Simulador', icon: <Calculator size={20} /> },
-    { path: '/profile', label: 'Perfil', icon: <User size={20} /> },
+    { path: '/', label: 'Inicio', icon: '🏠' },
+    { path: '/portfolio', label: 'Portfolio', icon: '💼' },
+    { path: '/analysis', label: 'Análisis', icon: '📊' },
+    { path: '/simulator', label: 'Simulador', icon: '🧮' },
+    { path: '/profile', label: 'Perfil', icon: '👤' },
   ];
 
   // handleLogout: cierra sesión y redirige al login
@@ -73,15 +72,14 @@ const Header: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center px-3 py-2 rounded-md transition-all duration-200 ${
+                  `flex items-center px-3 py-2 transition-all duration-200 ${
                     isActive 
-                      ? 'bg-black text-white font-medium' 
+                      ? 'bg-black text-white font-medium'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`
                 }
               >
-                <span className="mr-2">{item.icon}</span>
-                {item.label}
+                {item.icon} {item.label}
               </NavLink>
             ))}
             <button
@@ -89,14 +87,13 @@ const Header: React.FC = () => {
               className="ml-2 p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               aria-label="Toggle theme"
             >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              {isDark ? '🌞' : '🌚'}
             </button>
             <button
               onClick={handleLogout}
-              className="ml-2 px-4 py-2 bg-black text-white hover:bg-gray-900 transition-colors duration-200 flex items-center"
+              className="ml-2 px-4 py-2 text-gray-700 dark:text-gray-300 transition-colors duration-200 flex items-center bg-transparent hover:bg-transparent"
             >
-              <LogOut size={16} className="mr-2" />
-              Salir
+              ⏏️ Salir
             </button>
           </nav>
 
@@ -107,13 +104,13 @@ const Header: React.FC = () => {
               className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               aria-label="Toggle theme"
             >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              {isDark ? '🌞' : '🌚'}
             </button>
             <button
               onClick={toggleMenu}
               className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMenuOpen ? '✖️' : '☰'}
             </button>
           </div>
         </div>
@@ -135,15 +132,14 @@ const Header: React.FC = () => {
                 to={item.path}
                 onClick={() => setIsMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center px-3 py-2 rounded-md transition-all duration-200 ${
+                  `flex items-center px-3 py-2 transition-all duration-200 ${
                     isActive 
-                      ? 'bg-black text-white font-medium' 
+                      ? 'bg-black text-white font-medium'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`
                 }
               >
-                <span className="mr-2">{item.icon}</span>
-                {item.label}
+                {item.icon} {item.label}
               </NavLink>
             ))}
             <button
@@ -151,10 +147,9 @@ const Header: React.FC = () => {
                 setIsMenuOpen(false);
                 handleLogout();
               }}
-              className="w-full mt-2 px-4 py-2 bg-black text-white hover:bg-gray-900 transition-colors duration-200 flex items-center justify-center"
+              className="w-full mt-2 px-4 py-2 text-gray-700 dark:text-gray-300 transition-colors duration-200 flex items-center justify-center bg-transparent hover:bg-transparent"
             >
-              <LogOut size={16} className="mr-2" />
-              Salir
+              ⏏️ Salir
             </button>
           </div>
         </motion.div>

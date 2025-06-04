@@ -347,15 +347,6 @@ const Portfolio: React.FC = () => {
             >
               Exportar
             </button>
-            <label className="flex items-center gap-2 px-4 py-2 text-sm bg-white text-black border border-gray-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showInARS}
-                onChange={() => setShowInARS(prev => !prev)}
-                className="mr-2"
-              />
-              Mostrar en ARS
-            </label>
             <button
               onClick={() => setShowAddModal(true)}
               className="px-4 py-2 text-sm bg-black text-white border border-black"
@@ -408,7 +399,8 @@ const Portfolio: React.FC = () => {
 
         <div className="bg-white p-6 border">
           <div className="flex flex-wrap gap-4 justify-between items-center mb-6">
-            <div>
+            {/* Filtros de tipo y switches alineados y separados */}
+            <div className="flex items-center gap-3">
               <select
                 value={activeTypeFilter}
                 onChange={e => setActiveTypeFilter(e.target.value as any)}
@@ -419,22 +411,47 @@ const Portfolio: React.FC = () => {
                 <option value="CEDEAR">CEDEARs</option>
                 <option value="Cripto">Criptomonedas</option>
               </select>
-            </div>
-            <div className="flex items-center">
-              <button
-                type="button"
-                aria-pressed={mergeTransactions}
-                onClick={() => setMergeTransactions((prev) => !prev)}
-                className={`relative inline-flex items-center h-6 w-11 rounded-full transition-colors focus:outline-none ${
-                  mergeTransactions ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-                tabIndex={0}
-              >
-                <span
-                  className={`inline-block w-5 h-5 transform bg-white dark:bg-gray-200 rounded-full shadow transition-transform duration-200 
-                    ${mergeTransactions ? 'translate-x-5' : 'translate-x-1'}`}
-                />
-              </button>
+              {/* Agrupar switches con separación horizontal amplia */}
+              <div className="flex items-center gap-8 ml-4">
+                {/* Switch ARS/USD */}
+                <div className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowInARS(prev => !prev)}
+                    aria-pressed={showInARS}
+                    className={`relative inline-flex items-center h-6 w-11 rounded-full transition-colors focus:outline-none ${
+                      showInARS ? 'bg-[#0EA5E9]' : 'bg-[#00793E]'
+                    }`}
+                    tabIndex={0}
+                  >
+                    <span
+                      className={`inline-block w-5 h-5 transform bg-white rounded-full shadow transition-transform duration-200 ${
+                        showInARS ? 'translate-x-5' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                  <span className="ml-2 text-xl font-semibold text-gray-700">
+                    {showInARS ? '🇦🇷' : '🇺🇸'}
+                  </span>
+                </div>
+                {/* Switch fusionar transacciones */}
+                <div className="flex items-center">
+                  <button
+                    type="button"
+                    aria-pressed={mergeTransactions}
+                    onClick={() => setMergeTransactions((prev) => !prev)}
+                    className={`relative inline-flex items-center h-6 w-11 rounded-full transition-colors focus:outline-none ${
+                      mergeTransactions ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                    tabIndex={0}
+                  >
+                    <span
+                      className={`inline-block w-5 h-5 transform bg-white dark:bg-gray-200 rounded-full shadow transition-transform duration-200 
+                        ${mergeTransactions ? 'translate-x-5' : 'translate-x-1'}`}
+                    />
+                  </button>
+                </div>
+              </div>
             </div>
             <div className="flex-1 flex gap-4 justify-end flex-wrap items-center">
               <input
@@ -629,26 +646,10 @@ const Portfolio: React.FC = () => {
                             </td>
                           )}
                           {/* Asignación */}
-                          <td className="py-4 px-4">
-                            <div className="flex items-center justify-center">
-                              <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                <div
-                                  className={`h-2 rounded-full ${
-                                    activeTypeFilter === 'Todos'
-                                      ? 'bg-blue-600'
-                                      : activeTypeFilter === 'Cripto'
-                                      ? 'bg-orange-500'
-                                      : activeTypeFilter === 'CEDEAR'
-                                      ? 'bg-purple-600'
-                                      : 'bg-[#0EA5E9]'
-                                  }`}
-                                  style={{ width: `${asignacion.toFixed(2)}%` }}
-                                />
-                              </div>
-                              <span className="text-sm text-gray-600">
-                                {asignacion.toFixed(2)}%
-                              </span>
-                            </div>
+                          <td className="py-4 px-4 text-center">
+                            <span className="text-sm text-gray-600">
+                              {asignacion.toFixed(2)}%
+                            </span>
                           </td>
                           {/* Acciones */}
                           {!mergeTransactions && (

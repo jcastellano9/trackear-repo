@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { UserPlus, Eye } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 const Register: React.FC = () => {
   const { signUp } = useAuth();
@@ -66,7 +66,7 @@ const Register: React.FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center px-4">
       <motion.div
-        className="w-full max-w-md transition-colors duration-300 border border-gray-300 rounded-xl bg-white p-10"
+        className="w-full max-w-md transition-colors duration-300 border border-gray-300 rounded-none bg-white p-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -163,7 +163,6 @@ const Register: React.FC = () => {
                   <span className="animate-spin rounded-none h-5 w-5 border-t-2 border-white"></span>
                 ) : (
                   <>
-                    <UserPlus size={18} className="mr-2" />
                     Crear cuenta
                   </>
                 )}

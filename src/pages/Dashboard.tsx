@@ -17,7 +17,6 @@ import {
   ArcElement,
   Filler
 } from 'chart.js';
-import { ExternalLink } from 'lucide-react';
 import axios from 'axios';
 
 // Registrar componentes de ChartJS para habilitar gráficos de líneas y dona
@@ -451,7 +450,7 @@ const Dashboard: React.FC = () => {
       */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Invertido */}
-        <div className="bg-white rounded p-5 border border-gray-100">
+        <div className="bg-white rounded-none p-5 border border-gray-100 flex flex-col items-center justify-center text-center">
           <div>
             <p className="text-sm font-medium text-gray-500">
               Total Invertido ({showInARS ? 'ARS' : 'USD'})
@@ -467,7 +466,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Valor Actual */}
-        <div className="bg-white rounded p-5 border border-gray-100">
+        <div className="bg-white rounded-none p-5 border border-gray-100 flex flex-col items-center justify-center text-center">
           <div>
             <p className="text-sm font-medium text-gray-500">
               Valor Actual ({showInARS ? 'ARS' : 'USD'})
@@ -483,7 +482,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Ganancia/Pérdida */}
-        <div className="bg-white rounded p-5 border border-gray-100">
+        <div className="bg-white rounded-none p-5 border border-gray-100 flex flex-col items-center justify-center text-center">
           <div>
             <p className="text-sm font-medium text-gray-500">
               Ganancia/Pérdida ({showInARS ? 'ARS' : 'USD'})
@@ -501,7 +500,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Rendimiento */}
-        <div className="bg-white rounded p-5 border border-gray-100">
+        <div className="bg-white rounded-none p-5 border border-gray-100 flex flex-col items-center justify-center text-center">
           <div>
             <p className="text-sm font-medium text-gray-500">Rendimiento</p>
             {loadingDashboard ? (
@@ -519,14 +518,14 @@ const Dashboard: React.FC = () => {
 
       {/* Mostrar mensaje de error si ocurre al cargar datos del Dashboard */}
       {dashboardError && (
-        <div className="bg-red-100 text-red-700 px-4 py-3 rounded mt-4">
+        <div className="bg-red-100 text-red-700 px-4 py-3 rounded-none mt-4">
           Error cargando datos del dashboard: {typeof dashboardError === 'string' ? dashboardError : String(dashboardError)}
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Evolución del Capital con gráfico de líneas */}
-        <div className="lg:col-span-2 bg-white rounded p-5 border border-gray-100">
+        <div className="lg:col-span-2 bg-white rounded-none p-5 border border-gray-100">
           {/* Seleccionar rango de tiempo para el gráfico */}
           <div className="mb-4 flex flex-wrap justify-between items-center gap-4">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Evolución del Capital</h2>
@@ -536,7 +535,7 @@ const Dashboard: React.FC = () => {
                 id="range-select"
                 value={selectedRange}
                 onChange={e => setSelectedRange(e.target.value as 'All' | '1M' | '3M' | '6M' | 'YTD' | '1Y')}
-                className="border border-gray-300 rounded px-2 py-1 text-sm"
+                className="border border-gray-300 rounded-none px-2 py-1 text-sm"
               >
                 <option value="All">All</option>
                 <option value="1M">1M</option>
@@ -550,21 +549,42 @@ const Dashboard: React.FC = () => {
                 id="type-filter-select"
                 value={typeFilter}
                 onChange={e => setTypeFilter(e.target.value as 'Todos'|'Cripto'|'CEDEAR'|'Acción')}
-                className="border border-gray-300 rounded px-2 py-1 text-sm"
+                className="border border-gray-300 rounded-none px-2 py-1 text-sm"
               >
                 <option value="Todos">Todos</option>
                 <option value="Acción">Acciones</option>
                 <option value="CEDEAR">CEDEARs</option>
                 <option value="Cripto">Criptomonedas</option>
               </select>
-              <label className="ml-4 flex items-center gap-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showInARS}
-                  onChange={e => setShowInARS(e.target.checked)}
-                  className="accent-green-600"
-                />
-                Ver en ARS
+              {/* Switch ARS/USD estilo portfolio */}
+              <label className="ml-4 flex items-center gap-2 cursor-pointer select-none">
+                <span className="relative inline-block w-11 h-6">
+                  <input
+                    type="checkbox"
+                    checked={showInARS}
+                    onChange={e => setShowInARS(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <span
+                    className={
+                      "block w-11 h-6 rounded-full transition-colors duration-200 " +
+                      (showInARS
+                        ? "bg-[#0EA5E9]"
+                        : "bg-[#00793E]")
+                    }
+                  ></span>
+                  <span
+                    className={
+                      "absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 " +
+                      (showInARS
+                        ? "translate-x-5"
+                        : "")
+                    }
+                  ></span>
+                </span>
+                <span className="ml-2 text-sm font-semibold text-gray-700">
+                  {showInARS ? "ARS" : "USD"}
+                </span>
               </label>
             </div>
           </div>
@@ -574,7 +594,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Distribución del Portafolio con gráfico de dona */}
-        <div className="bg-white rounded p-5 border border-gray-100">
+        <div className="bg-white rounded-none p-5 border border-gray-100">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-800">Distribución del Portfolio</h2>
           </div>
@@ -604,9 +624,9 @@ const Dashboard: React.FC = () => {
                   return (
                     <li
                       key={i}
-                      className="flex items-center gap-2 whitespace-nowrap px-2 py-1 rounded-md bg-gray-100 w-fit"
+                      className="flex items-center gap-2 whitespace-nowrap px-2 py-1 rounded-none bg-gray-100 w-fit"
                     >
-                      <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: color }}></span>
+                      <span className="inline-block w-3 h-3 rounded-none" style={{ backgroundColor: color }}></span>
                       <span className="font-medium">{label}</span>
                       <span className="text-gray-500">({percent}%)</span>
                     </li>
@@ -622,17 +642,10 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 gap-6">
         {/* Cotizaciones del Dólar */}
         <div
-          className="bg-white rounded p-5 border border-gray-100"
+          className="bg-white rounded-none p-5 border border-gray-100"
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-800">Cotizaciones del Dólar</h2>
-            <a
-              href="/analysis?section=dolar"
-              className="inline-flex items-center gap-1 text-sm font-medium text-blue-600"
-            >
-              Ver más
-              <ExternalLink size={14} strokeWidth={1.5} />
-            </a>
           </div>
           {loadingQuotes ? (
             <div className="text-center py-10">
@@ -643,7 +656,7 @@ const Dashboard: React.FC = () => {
               {dollarQuotes.map((quote, index) => (
                 <div
                   key={index}
-                  className="w-full bg-white rounded border p-4"
+                  className="w-full bg-white rounded-none border p-4 flex flex-col items-center justify-center text-center"
                 >
                   <h3>{quote.name}</h3>
                   <div className="grid grid-cols-2 gap-4 justify-items-center">
@@ -668,17 +681,10 @@ const Dashboard: React.FC = () => {
 
         {/* Cotizaciones Cripto */}
         <div
-          className="bg-white rounded p-5 border border-gray-100"
+          className="bg-white rounded-none p-5 border border-gray-100"
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-800">Cotizaciones Cripto</h2>
-            <a
-              href="/analysis?section=cripto"
-              className="inline-flex items-center gap-1 text-sm font-medium text-blue-600"
-            >
-              Ver más
-              <ExternalLink size={14} strokeWidth={1.5} />
-            </a>
           </div>
           {loadingQuotes ? (
             <div className="text-center py-10">
@@ -691,7 +697,7 @@ const Dashboard: React.FC = () => {
                 .map((quote, index) => (
                   <div
                     key={index}
-                    className="bg-white rounded border p-4"
+                    className="bg-white rounded-none border p-4 flex flex-col items-center justify-center text-center"
                   >
                     <h3>{quote.name}</h3>
                     <div className="text-xs text-gray-500 mb-2">
@@ -716,7 +722,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 ))}
               {/* Inflación mensual simplificada */}
-              <div className="bg-white border p-4 text-center">
+              <div className="bg-white border p-4 text-center rounded-none flex flex-col items-center justify-center h-full">
                 <p className="text-sm text-gray-600">Inflación mensual esperada</p>
                 {inflationError ? (
                   <p className="text-base text-red-500">Sin datos</p>

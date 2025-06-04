@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import {LogIn, EyeOff, Eye} from 'lucide-react';
+import { EyeOff, Eye} from 'lucide-react';
 
 const Login: React.FC = () => {
   const { signIn } = useAuth();
@@ -48,7 +48,7 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-md transition-colors duration-300">
-        <div className="bg-white rounded-2xl p-8 ring-1 ring-gray-200">
+        <div className="bg-white rounded-none p-8 ring-1 ring-gray-200">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-black">
               TrackeAr
@@ -99,7 +99,7 @@ const Login: React.FC = () => {
                 <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
+                    className="absolute right-4 top-1/2 -translate-y-0/4 h-6 w-6 flex items-center justify-center text-gray-500 hover:text-black"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -114,7 +114,6 @@ const Login: React.FC = () => {
                   <span className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></span>
                 ) : (
                   <>
-                    <LogIn size={18} className="mr-2" />
                     Iniciar sesión
                   </>
                 )}
