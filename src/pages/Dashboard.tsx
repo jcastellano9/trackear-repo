@@ -211,7 +211,6 @@ const Dashboard: React.FC = () => {
       setCapitalData({ labels: [], datasets: [] });
       return;
     }
-    // Extraer etiquetas (fechas) y series sin modificaciones
     const labels = filteredDataRaw.map(item => item.fecha);
     const seriesCripto = filteredDataRaw.map(item => item.Cripto);
     const seriesCedear = filteredDataRaw.map(item => item.CEDEAR);
