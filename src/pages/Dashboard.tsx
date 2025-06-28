@@ -722,7 +722,7 @@ const Dashboard: React.FC = () => {
                 ))}
               {/* Inflación mensual simplificada */}
               <div className="bg-white border p-4 text-center rounded-none flex flex-col items-center justify-center h-full">
-                <p className="text-sm text-gray-600">Inflación mensual esperada</p>
+                <p className="text-sm text-gray-600">Inflación mensual</p>
                 {inflationError ? (
                   <p className="text-base text-red-500">Sin datos</p>
                 ) : lastInflation !== null ? (

@@ -276,7 +276,6 @@ const Simulator: React.FC = () => {
       return;
     }
 
-    const totalFinanced = totalInstallment;
     const installment = totalInstallment / count;
     // Inflación estimada
     if (monthlyInflation === null || isNaN(monthlyInflation)) {
@@ -291,6 +290,8 @@ const Simulator: React.FC = () => {
       adjustedInstallments.push(adjusted);
       totalAdjusted += adjusted;
     }
+    // Costo total financiado = suma de cuotas ajustadas
+    const totalFinanced = totalAdjusted;
 
     // Promedio billetera virtual/FCI
     const avgWalletRate = walletRates.length
@@ -300,14 +301,13 @@ const Simulator: React.FC = () => {
       ? bankRates.reduce((sum, r) => sum + r.rate, 0) / bankRates.length
       : 35;
 
-    // Simulación inversión alternativa
-    const fciProjection = cash * Math.pow(1 + avgWalletRate / 100, count / 12);
-    const pfProjection = cash * Math.pow(1 + avgBankRate / 100, count / 12);
+    // Proyección usando TNA compuesta mensualmente
+    const fciProjection = cash * Math.pow(1 + avgWalletRate / 100 / 12, count);
+    // Proyección usando TNA compuesta mensualmente
+    const pfProjection = cash * Math.pow(1 + avgBankRate / 100 / 12, count);
 
-    // CFT corregido (anualizado)
-    // Nuevo cálculo usando tasa efectiva anual realista
-    // Cálculo corregido: tasa mensual = (cuota / cuota ideal proporcional al contado) - 1
-    const monthlyRate = Math.pow(totalFinanced / cash, 1 / count) - 1;
+    // Cálculo del CFT usando monto nominal financiado
+    const monthlyRate = Math.pow(totalInstallment / cash, 1 / count) - 1;
     if (monthlyRate <= -1) {
       setError('Los datos ingresados generan un CFT inválido. Verificá los montos.');
       return;

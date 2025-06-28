@@ -507,10 +507,8 @@ const Analysis: React.FC = () => {
     if (activeQuoteSection === 'pix') {
       if (selectedPixSymbol === 'USD') {
         displaySuffix = 'R$';
-        displayNote = 'para pagar';
       } else if (selectedPixSymbol === 'ARS') {
         displaySuffix = '';
-        displayNote = 'para pagar';
       }
     }
     return (
