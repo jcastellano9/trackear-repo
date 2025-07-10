@@ -1,12 +1,12 @@
-# 📊 TrackeAr - Sistema Web para la Gestión Personal de Inversiones Financieras
+# 📊 TrackeAR - Sistema Web para la Gestión Personal de Inversiones Financieras
 
-**TrackeAr** es una aplicación web desarrollada como parte del Trabajo Final de Grado en Ingeniería en Software de la Universidad Siglo 21. Su objetivo es centralizar la gestión de inversiones personales en un solo entorno digital, facilitando el análisis, la comparación y la toma de decisiones financieras en el contexto económico argentino.
+**TrackeAR** es una aplicación web desarrollada como parte del Trabajo Final de Grado en Ingeniería en Software de la Universidad Siglo 21. Su objetivo es centralizar la gestión de inversiones personales en un solo entorno digital, facilitando el análisis, la comparación y la toma de decisiones financieras en el contexto económico argentino.
 
 ---
 
 ## 🚀 Funcionalidades Principales
 
-- 📈 **Visualización de cartera** de inversiones (criptomonedas y CEDEARs).
+- 📈 **Visualización de cartera** de inversiones (acciones, criptomonedas y CEDEARs).
 - 🧮 **Simuladores financieros** de:
   - Plazos fijos
   - Billeteras virtuales
@@ -21,13 +21,22 @@
 
 ## 🧑‍💻 Tecnologías Utilizadas
 
-- **Frontend:** React + TypeScript + Vite
-- **Estilos:** Tailwind CSS
-- **Backend & DB:** Supabase (PostgreSQL + Auth + Realtime API)
-- **Visualización:** Chart.js
-- **Control de versiones:** Git + GitHub
-- **IDE:** WebStorm
-- **Sistema operativo:** MacOS
+**🌐 Frontend**
+-**React.js**: construcción de interfaces dinámicas y reutilizables.
+-**TypeScript**: tipado estático para mayor seguridad y mantenibilidad.
+-**Vite**: entorno de desarrollo rápido con recarga instantánea.
+-**Tailwind CSS**: estilos modernos y responsive con clases utilitarias.
+-**Chart.js**: visualización de datos financieros mediante gráficos.
+
+🔒 **Backend & Base de Datos**
+- **Supabase**: backend as a service con:
+-	PostgreSQL como motor de base de datos.
+- Auth para registro y login de usuarios.
+
+🛠️ **Herramientas de Desarrollo**
+	•	**Git + GitHub**: control de versiones y repositorio remoto.
+	•	**WebStorm**: IDE utilizado durante todo el desarrollo.
+	•	**macOS**: sistema operativo principal del entorno de trabajo.
 
 ---
 
