@@ -159,20 +159,36 @@ export function usePortfolioData() {
           price: coin.current_price,
           id: coin.id,
         }));
-        // CEDEARs
-        const cedearRes = await fetch('https://api.cedears.ar/cedears');
-        const cedearData = await cedearRes.json();
-        const cedears: PredefinedAsset[] = cedearData.map((item: any) => ({
+        // Paginated fetch for CEDEARs
+        let cedearsRaw: any[] = [];
+        let pageCE = 1;
+        let totalPagesCE = 1;
+        do {
+          const res = await fetch(`https://api.cedears.ar/cedears?page=${pageCE}`);
+          const json = await res.json();
+          cedearsRaw = cedearsRaw.concat(json.data ?? []);
+          totalPagesCE = json.pagination?.totalPages ?? 1;
+          pageCE++;
+        } while (pageCE <= totalPagesCE);
+        const cedears: PredefinedAsset[] = cedearsRaw.map((item: any) => ({
           ticker: item.ticker,
           name: item.name,
           type: 'CEDEAR',
           logo: item.icon,
           price: item.ars?.c,
         }));
-        // Acciones
-        const accionesRes = await fetch('https://api.cedears.ar/acciones');
-        const accionesData = await accionesRes.json();
-        const acciones: PredefinedAsset[] = accionesData.map((item: any) => ({
+        // Paginated fetch for Acciones
+        let accionesRawArr: any[] = [];
+        let pageAC = 1;
+        let totalPagesAC = 1;
+        do {
+          const res = await fetch(`https://api.cedears.ar/acciones?page=${pageAC}`);
+          const json = await res.json();
+          accionesRawArr = accionesRawArr.concat(json.data ?? []);
+          totalPagesAC = json.pagination?.totalPages ?? 1;
+          pageAC++;
+        } while (pageAC <= totalPagesAC);
+        const acciones: PredefinedAsset[] = accionesRawArr.map((item: any) => ({
           ticker: item.ticker,
           name: item.name,
           type: 'Acción',
