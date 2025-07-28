@@ -422,7 +422,7 @@ const Analysis: React.FC = () => {
   const bestPixQuote = pixQuotes
       .filter(q => selectedPixSymbol ? q.name.toLowerCase().includes(`paga con ${selectedPixSymbol.toLowerCase()}`) : true)
       .reduce((best, current) => {
-        if (!best || (current.buy !== null && current.buy < (best.buy ?? Infinity))) {
+        if (!best || (current.buy !== null && current.buy > (best.buy ?? Infinity))) {
           return current;
         }
         return best;
@@ -728,8 +728,8 @@ const Analysis: React.FC = () => {
                     }
                     if (!quotes || quotes.length === 0) return null;
 
-                    const bestBuy = quotes.reduce((a, b) => (b.buy !== null && (a.buy === null || b.buy < a.buy) ? b : a), quotes[0]);
-                    const bestSell = quotes.reduce((a, b) => (b.sell !== null && (a.sell === null || b.sell > a.sell) ? b : a), quotes[0]);
+                    const bestBuy = quotes.reduce((a, b) => (b.buy !== null && (a.buy === null || b.buy > a.buy) ? b : a), quotes[0]);
+                    const bestSell = quotes.reduce((a, b) => (b.sell !== null && (a.sell === null || b.sell < a.sell) ? b : a), quotes[0]);
                     const bestSpread = quotes.reduce((a: Quote, b: Quote) =>
                             b.spread != null && (a.spread == null || b.spread! < a.spread!)
                                 ? b
