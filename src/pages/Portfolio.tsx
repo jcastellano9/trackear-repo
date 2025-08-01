@@ -58,13 +58,18 @@ const Portfolio: React.FC = () => {
   const [mergeTransactions, setMergeTransactions] = useState(true);
   const [showInARS, setShowInARS] = useState(true);
   const [sortBy, setSortBy] = useState<
-      'favoritosFechaDesc' |
-      'tickerAZ' | 'tickerZA' |
-      'gananciaPorcentajeAsc' | 'gananciaPorcentajeDesc' |
-      'gananciaValorAsc' | 'gananciaValorDesc' |
-      'tenenciaAsc' | 'tenenciaDesc' |
-      'fechaAsc' | 'fechaDesc'
-  >('favoritosFechaDesc');
+      | 'favoritosFechaDesc'
+      | 'tickerAZ' | 'tickerZA'
+      | 'gananciaPorcentajeAsc' | 'gananciaPorcentajeDesc'
+      | 'gananciaValorAsc' | 'gananciaValorDesc'
+      | 'tenenciaAsc' | 'tenenciaDesc'
+      | 'fechaAsc' | 'fechaDesc'
+      | 'favoritoAsc' | 'favoritoDesc'
+      | 'nombreAsc' | 'nombreDesc'
+      | 'cantidadAsc' | 'cantidadDesc'
+      | 'ppcAsc' | 'ppcDesc'
+      | 'asignacionAsc' | 'asignacionDesc'
+  >('tickerAZ');
 
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -210,72 +215,6 @@ const Portfolio: React.FC = () => {
     const ppcUnit   = getAdjustedPpc(inv);
     return (priceUnit - ppcUnit) * inv.quantity;
   };
-  // sortedInvestments: Ordena inversiones según criterio seleccionado
-  const sortedInvestments = [...displayedInvestments].sort((a, b) => {
-    if (sortBy === 'favoritosFechaDesc') {
-      const favDiff = (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
-      if (favDiff !== 0) return favDiff;
-      return new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime();
-    }
-
-    if (sortBy === 'tickerAZ') return a.ticker.localeCompare(b.ticker);
-    if (sortBy === 'tickerZA') return b.ticker.localeCompare(a.ticker);
-
-    const getPct = (inv: Investment) => {
-      const pct = calculateReturn(
-          getAdjustedPrice(inv),
-          inv.purchasePrice,
-          inv.currency,
-          showInARS,
-          cclPrice,
-          inv.type
-      ).percentage;
-      return isNaN(pct) ? 0 : pct;
-    };
-    if (sortBy === 'gananciaPorcentajeAsc')  return getPct(a) - getPct(b);
-    if (sortBy === 'gananciaPorcentajeDesc') return getPct(b) - getPct(a);
-
-    if (sortBy === 'gananciaValorAsc')  return getChangeAmt(a) - getChangeAmt(b);
-    if (sortBy === 'gananciaValorDesc') return getChangeAmt(b) - getChangeAmt(a);
-
-    const getTen = (inv: Investment) => getAdjustedPrice(inv) * inv.quantity;
-    if (sortBy === 'tenenciaAsc')  return getTen(a) - getTen(b);
-    if (sortBy === 'tenenciaDesc') return getTen(b) - getTen(a);
-
-    const dateDiff = new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime();
-    if (sortBy === 'fechaAsc')  return dateDiff;
-    if (sortBy === 'fechaDesc') return -dateDiff;
-
-    return 0;
-  });
-
-
-  // formatCurrency: Formatea valor en ARS o USD con localización 'es-AR'
-  const formatCurrency = (value: number, currency: 'USD' | 'ARS' = 'ARS') => {
-    const formatter = new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: currency === 'USD' ? 2 : 0,
-      maximumFractionDigits: currency === 'USD' ? 2 : 0,
-      notation: 'standard',
-      useGrouping: true
-    });
-    return formatter.format(value);
-  };
-
-  const totalCurrencyToShow = showInARS ? 'ARS' : 'USD';
-
-  // useEffect: Captura errores globales y los registra en consola
-  useEffect(() => {
-    window.onerror = function (message, source, lineno, colno, error) {
-      console.error("Global Error:", { message, source, lineno, colno, error });
-    };
-  }, []);
-
-  // Mostrar estados de carga y error antes de renderizar el contenido principal
-  if (loading) return <div className="text-center py-10">Cargando inversiones…</div>;
-  if (fetchError) return <div className="text-center py-10 text-red-500">Error al cargar inversiones: {fetchError}</div>;
-
   // totalTenencia: Suma valor (precio ajustado * cantidad) de cada inversión
   const totalTenencia = displayedInvestments.reduce(
       (acc, inv) => {
@@ -312,6 +251,124 @@ const Portfolio: React.FC = () => {
       },
       0
   );
+  // sortedInvestments: Ordena inversiones según criterio seleccionado
+  const sortedInvestments = [...displayedInvestments].sort((a, b) => {
+    if (sortBy === 'favoritosFechaDesc') {
+      const favDiff = (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
+      if (favDiff !== 0) return favDiff;
+      return new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime();
+    }
+
+    // ❤️ Favorito: favoritos primero (asc), no favoritos primero (desc)
+    if (sortBy === 'favoritoAsc') {
+      return (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
+    }
+    if (sortBy === 'favoritoDesc') {
+      return (a.isFavorite ? 1 : 0) - (b.isFavorite ? 1 : 0);
+    }
+
+    // Nombre
+    if (sortBy === 'nombreAsc') {
+      return a.name.localeCompare(b.name);
+    }
+    if (sortBy === 'nombreDesc') {
+      return b.name.localeCompare(a.name);
+    }
+
+    // Cantidad
+    if (sortBy === 'cantidadAsc') {
+      return a.quantity - b.quantity;
+    }
+    if (sortBy === 'cantidadDesc') {
+      return b.quantity - a.quantity;
+    }
+
+    // PPC
+    if (sortBy === 'ppcAsc') {
+      return getAdjustedPpc(a) - getAdjustedPpc(b);
+    }
+    if (sortBy === 'ppcDesc') {
+      return getAdjustedPpc(b) - getAdjustedPpc(a);
+    }
+
+    // Asignación
+    const getTen = (inv: Investment) => getAdjustedPrice(inv) * inv.quantity;
+    const asignA = totalTenencia > 0 ? getTen(a) / totalTenencia : 0;
+    const asignB = totalTenencia > 0 ? getTen(b) / totalTenencia : 0;
+    if (sortBy === 'asignacionAsc') {
+      return asignA - asignB;
+    }
+    if (sortBy === 'asignacionDesc') {
+      return asignB - asignA;
+    }
+
+    // Ticker
+    if (sortBy === 'tickerAZ') {
+      // Priorizar favoritos primero, luego ordenar por ticker
+      const favDiff = (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
+      if (favDiff !== 0) return favDiff;
+      return a.ticker.localeCompare(b.ticker);
+    }
+    if (sortBy === 'tickerZA') return b.ticker.localeCompare(a.ticker);
+
+    // Ganancia %
+    const getPct = (inv: Investment) => {
+      const pct = calculateReturn(
+          getAdjustedPrice(inv),
+          inv.purchasePrice,
+          inv.currency,
+          showInARS,
+          cclPrice,
+          inv.type
+      ).percentage;
+      return isNaN(pct) ? 0 : pct;
+    };
+    if (sortBy === 'gananciaPorcentajeAsc')  return getPct(a) - getPct(b);
+    if (sortBy === 'gananciaPorcentajeDesc') return getPct(b) - getPct(a);
+
+    // Ganancia $
+    if (sortBy === 'gananciaValorAsc')  return getChangeAmt(a) - getChangeAmt(b);
+    if (sortBy === 'gananciaValorDesc') return getChangeAmt(b) - getChangeAmt(a);
+
+    // Tenencia
+    if (sortBy === 'tenenciaAsc')  return getTen(a) - getTen(b);
+    if (sortBy === 'tenenciaDesc') return getTen(b) - getTen(a);
+
+    // Fecha
+    const dateDiff = new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime();
+    if (sortBy === 'fechaAsc')  return dateDiff;
+    if (sortBy === 'fechaDesc') return -dateDiff;
+
+    return 0;
+  });
+
+
+  // formatCurrency: Formatea valor en ARS o USD con localización 'es-AR'
+  const formatCurrency = (value: number, currency: 'USD' | 'ARS' = 'ARS') => {
+    const formatter = new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: currency === 'USD' ? 2 : 0,
+      maximumFractionDigits: currency === 'USD' ? 2 : 0,
+      notation: 'standard',
+      useGrouping: true
+    });
+    return formatter.format(value);
+  };
+
+  const totalCurrencyToShow = showInARS ? 'ARS' : 'USD';
+
+  // useEffect: Captura errores globales y los registra en consola
+  useEffect(() => {
+    window.onerror = function (message, source, lineno, colno, error) {
+      console.error("Global Error:", { message, source, lineno, colno, error });
+    };
+  }, []);
+
+  // Mostrar estados de carga y error antes de renderizar el contenido principal
+  if (loading) return <div className="text-center py-10">Cargando inversiones…</div>;
+  if (fetchError) return <div className="text-center py-10 text-red-500">Error al cargar inversiones: {fetchError}</div>;
+
 
   // resumenGlobal: Genera métricas generales (invertido, cambioTotal, valorActual, etc.)
   const resumenGlobal = getResumenGlobalFiltrado({
@@ -517,7 +574,7 @@ const Portfolio: React.FC = () => {
                     </button>
                 ))}
               </div>
-              <div className="flex items-center">
+              <div className="flex-1 flex justify-center">
                 <button
                     type="button"
                     aria-pressed={mergeTransactions}
@@ -544,35 +601,7 @@ const Portfolio: React.FC = () => {
                       className="max-w-xs w-full h-9 pl-10 pr-4 text-sm py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-                <div>
-                  <select
-                      id="sortBy"
-                      value={sortBy}
-                      onChange={e =>
-                          setSortBy(e.target.value as
-                              'favoritosFechaDesc' |
-                              'tickerAZ' | 'tickerZA' |
-                              'gananciaPorcentajeAsc' | 'gananciaPorcentajeDesc' |
-                              'gananciaValorAsc' | 'gananciaValorDesc' |
-                              'tenenciaAsc' | 'tenenciaDesc' |
-                              'fechaAsc' | 'fechaDesc'
-                          )
-                      }
-                      className="w-full max-w-xs px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="favoritosFechaDesc">Favoritos</option>
-                    <option value="tickerAZ">Ticker A → Z</option>
-                    <option value="tickerZA">Ticker Z → A</option>
-                    <option value="gananciaPorcentajeAsc">Ganancia % ↑</option>
-                    <option value="gananciaPorcentajeDesc">Ganancia % ↓</option>
-                    <option value="gananciaValorAsc">Ganancia $ ↑</option>
-                    <option value="gananciaValorDesc">Ganancia $ ↓</option>
-                    <option value="tenenciaAsc">Tenencia ↑</option>
-                    <option value="tenenciaDesc">Tenencia ↓</option>
-                    <option value="fechaAsc">Fecha ↑</option>
-                    <option value="fechaDesc">Fecha ↓</option>
-                  </select>
-                </div>
+                {/* Sorting dropdown removed, replaced by sortable table headers */}
               </div>
             </div>
 
@@ -586,22 +615,128 @@ const Portfolio: React.FC = () => {
                     <thead>
                     <tr className="text-left border-b border-gray-200">
                       {!mergeTransactions && (
-                          <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">❤️</th>
+                        <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">
+                          <button
+                            onClick={() => setSortBy('favoritosFechaDesc')}
+                            className="flex items-center justify-center gap-1 w-full"
+                          >
+                            ❤️
+                          </button>
+                        </th>
                       )}
-                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600">Ticker</th>
-                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center max-w-[5rem]">Nombre</th>
+                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600">
+                        <button
+                          onClick={() => {
+                            const isAsc = sortBy === 'tickerAZ';
+                            setSortBy(isAsc ? 'tickerZA' : 'tickerAZ');
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          Ticker
+                          {sortBy === 'tickerAZ' ? '▲' : sortBy === 'tickerZA' ? '▼' : ''}
+                        </button>
+                      </th>
+                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center max-w-[5rem]">
+                        <button
+                          onClick={() => {
+                            const isAsc = sortBy === 'nombreAsc';
+                            setSortBy(isAsc ? 'nombreDesc' : 'nombreAsc');
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          Nombre
+                          {sortBy === 'nombreAsc' ? '▲' : sortBy === 'nombreDesc' ? '▼' : ''}
+                        </button>
+                      </th>
                       <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">Precio Actual</th>
-                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">Cambio $</th>
-                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">Cambio %</th>
-                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">Cantidad</th>
-                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">PPC</th>
-                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">Tenencia</th>
+                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">
+                        <button
+                          onClick={() => {
+                            const isAsc = sortBy === 'gananciaValorAsc';
+                            setSortBy(isAsc ? 'gananciaValorDesc' : 'gananciaValorAsc');
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          Cambio $
+                          {sortBy === 'gananciaValorAsc' ? '▲' : sortBy === 'gananciaValorDesc' ? '▼' : ''}
+                        </button>
+                      </th>
+                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">
+                        <button
+                          onClick={() => {
+                            const isAsc = sortBy === 'gananciaPorcentajeAsc';
+                            setSortBy(isAsc ? 'gananciaPorcentajeDesc' : 'gananciaPorcentajeAsc');
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          Cambio %
+                          {sortBy === 'gananciaPorcentajeAsc' ? '▲' : sortBy === 'gananciaPorcentajeDesc' ? '▼' : ''}
+                        </button>
+                      </th>
+                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">
+                        <button
+                          onClick={() => {
+                            const isAsc = sortBy === 'cantidadAsc';
+                            setSortBy(isAsc ? 'cantidadDesc' : 'cantidadAsc');
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          Cantidad
+                          {sortBy === 'cantidadAsc' ? '▲' : sortBy === 'cantidadDesc' ? '▼' : ''}
+                        </button>
+                      </th>
+                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">
+                        <button
+                          onClick={() => {
+                            const isAsc = sortBy === 'ppcAsc';
+                            setSortBy(isAsc ? 'ppcDesc' : 'ppcAsc');
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          PPC
+                          {sortBy === 'ppcAsc' ? '▲' : sortBy === 'ppcDesc' ? '▼' : ''}
+                        </button>
+                      </th>
+                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">
+                        <button
+                          onClick={() => {
+                            const isAsc = sortBy === 'tenenciaAsc';
+                            setSortBy(isAsc ? 'tenenciaDesc' : 'tenenciaAsc');
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          Tenencia
+                          {sortBy === 'tenenciaAsc' ? '▲' : sortBy === 'tenenciaDesc' ? '▼' : ''}
+                        </button>
+                      </th>
                       {!mergeTransactions && (
-                          <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">Fecha</th>
+                        <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">
+                          <button
+                            onClick={() => {
+                              const isAsc = sortBy === 'fechaAsc';
+                              setSortBy(isAsc ? 'fechaDesc' : 'fechaAsc');
+                            }}
+                            className="flex items-center gap-1"
+                          >
+                            Fecha
+                            {sortBy === 'fechaAsc' ? '▲' : sortBy === 'fechaDesc' ? '▼' : ''}
+                          </button>
+                        </th>
                       )}
-                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">Asignación</th>
+                      <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">
+                        <button
+                          onClick={() => {
+                            const isAsc = sortBy === 'asignacionAsc';
+                            setSortBy(isAsc ? 'asignacionDesc' : 'asignacionAsc');
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          Asignación
+                          {sortBy === 'asignacionAsc' ? '▲' : sortBy === 'asignacionDesc' ? '▼' : ''}
+                        </button>
+                      </th>
                       {!mergeTransactions && (
-                          <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">Acciones</th>
+                        <th className="pb-3 px-4 text-sm font-semibold text-gray-600 text-center">Acciones</th>
                       )}
                     </tr>
                     </thead>

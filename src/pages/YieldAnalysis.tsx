@@ -66,81 +66,42 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
         const plazosData = await plazosRes.json();
         const criptoData = await criptoRes.json();
 
-        // Obtener detalle de Prex
-        const prexRes = await fetch('https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Allaria%20Ahorro%20-%20Clase%20A');
-        const prexJson = await prexRes.json();
-        const prexTna = prexJson?.detalle?.rendimientos?.diario?.tna || 0;
+        const billeteraFondos = [
+          { nombre: 'Prex', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Allaria%20Ahorro%20-%20Clase%20A' },
+          { nombre: 'Cocos', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Cocos%20Daruma%20Renta%20Mixta%20-%20Clase%20A' },
+          { nombre: 'Personal Pay', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Delta%20Pesos%20-%20Clase%20X' },
+          { nombre: 'MercadoPago', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Mercado%20Pago%20-%20Clase%20A' },
+          { nombre: 'LB Finanzas', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/ST%20Zero%20-%20Clase%20D' },
+          { nombre: 'Lemon', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Fima%20Premium%20-%20Clase%20P' }
+        ];
 
-        // Obtener detalle de Cocos
-        const cocosRes = await fetch('https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Cocos%20Daruma%20Renta%20Mixta%20-%20Clase%20A');
-        const cocosJson = await cocosRes.json();
-        const cocosTna = cocosJson?.detalle?.rendimientos?.diario?.tna || 0;
-
-        // Obtener detalle de Personal Pay
-        const personalPayRes = await fetch('https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Delta%20Pesos%20-%20Clase%20X');
-        const personalPayJson = await personalPayRes.json();
-        const personalPayTna = personalPayJson?.detalle?.rendimientos?.diario?.tna || 0;
-
-        // Obtener detalle de MercadoPago
-        const mercadoPagoRes = await fetch('https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Mercado%20Pago%20-%20Clase%20A');
-        const mercadoPagoJson = await mercadoPagoRes.json();
-        const mercadoPagoTna = mercadoPagoJson?.detalle?.rendimientos?.diario?.tna || 0;
-
-        // Obtener detalle de LB Finanzas
-        const lbRes = await fetch('https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/ST%20Zero%20-%20Clase%20D');
-        const lbJson = await lbRes.json();
-        const lbTna = lbJson?.detalle?.rendimientos?.diario?.tna || 0;
-
-        // Obtener detalle de Lemon
-        const lemonRes = await fetch('https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Fima%20Premium%20-%20Clase%20P');
-        const lemonJson = await lemonRes.json();
-        const lemonTna = lemonJson?.detalle?.rendimientos?.diario?.tna || 0;
-
-        setBilleteras(
-            billeterasData
-                .concat({
-                  nombre: 'Prex',
-                  tna: prexTna,
-                  limite: 0,
-                  url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Allaria%20Ahorro%20-%20Clase%20A',
-                })
-                .concat({
-                  nombre: 'Cocos',
-                  tna: cocosTna,
-                  limite: 0,
-                  url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Cocos%20Daruma%20Renta%20Mixta%20-%20Clase%20A',
-                })
-                .concat({
-                  nombre: 'Personal Pay',
-                  tna: personalPayTna,
-                  limite: 0,
-                  url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Delta%20Pesos%20-%20Clase%20X',
-                })
-                .concat({
-                  nombre: 'MercadoPago',
-                  tna: mercadoPagoTna,
-                  limite: 0,
-                  url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Mercado%20Pago%20-%20Clase%20A',
-                })
-                .concat({
-                  nombre: 'LB Finanzas',
-                  tna: lbTna,
-                  limite: 0,
-                  url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/ST%20Zero%20-%20Clase%20D',
-                })
-                .concat({
-                  nombre: 'AstroPay',
-                  tna: lbTna,
-                  limite: 0,
-                  url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/ST%20Zero%20-%20Clase%20D',
-                })
-                .concat({
-                  nombre: 'Lemon',
-                  tna: lemonTna,
-                  limite: 0,
-                  url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Fima%20Premium%20-%20Clase%20P',
-                })
+        const billeteraFetches = await Promise.allSettled(
+          billeteraFondos.map(fondo => fetch(fondo.url).then(async res => {
+            if (!res.ok) throw new Error('404');
+            const json = await res.json();
+            return {
+              nombre: fondo.nombre,
+              tna: json?.detalle?.rendimientos?.diario?.tna || 0,
+              limite: 0,
+              url: fondo.url
+            };
+          }))
         );
+
+        const billeterasExtras = billeteraFetches
+          .filter(r => r.status === 'fulfilled')
+          .map(r => (r as PromiseFulfilledResult<Billetera>).value);
+
+        if (process.env.NODE_ENV === 'development') {
+          billeteraFetches.forEach((res, i) => {
+            if (res.status === 'rejected') {
+              // eslint-disable-next-line no-console
+              console.warn(`⚠️ Error al obtener datos de: ${billeteraFondos[i].nombre}`);
+            }
+          });
+        }
+
+        setBilleteras([...billeterasData, ...billeterasExtras]);
         setPlazosFijos(plazosData);
         setCripto(criptoData);
       } catch (err: any) {
@@ -251,6 +212,23 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
     'takenos': '/icons/takenos.svg',
     'banco-ggal-sa': '/icons/banco-galicia.svg',
     'lbfinanzas': '/icons/letsbit.svg',
+    'banco-tierra-del-fuego': '/icons/banco-tierra-del-fuego.svg',
+    'banco-voii': '/icons/banco-voii.svg',
+    'banco-woii': '/icons/banco-voii.svg',
+    'bibank': '/icons/bibank.svg',
+    'credito-regional': '/icons/credito-regional.svg',
+    'galicia': '/icons/banco-galicia.svg',
+    'ibc': '/icons/ibc.svg',
+    'macro': '/icons/banco-macro.svg',
+    'reba': '/icons/reba.svg',
+    'banco-de-corrientes': '/icons/banco-corrientes.svg',
+    'banco-de-formosa': '/icons/banco-formosa.svg',
+    'banco-ggal': '/icons/banco-galicia.svg',
+    'banco-santander': '/icons/banco-santander.svg',
+    'bancor': '/icons/bancor.svg',
+    'bbva': '/icons/banco-bbva.svg',
+    'galicia+': '/icons/banco-galicia.svg',
+    'icbc': '/icons/banco-icbc.svg'
   };
 
   // Barra de navegación para cambiar de sección

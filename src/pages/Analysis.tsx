@@ -102,6 +102,7 @@ const Analysis: React.FC = () => {
   // Estados de carga y error
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showError, setShowError] = useState(true);
 
   // Filtrar visual de Dólar: selectedCurrency y filteredDollarQuotes
   const [selectedCurrency, setSelectedCurrency] = useState<'USD' | 'Bancos' | 'Alternativos' | 'Billeteras Virtuales'>('USD');
@@ -295,6 +296,8 @@ const Analysis: React.FC = () => {
 
         if (allQuotes.every(q => !q.buy && !q.sell)) {
           setError('No se pudieron cargar las cotizaciones de criptomonedas (datos vacíos).');
+          setShowError(true);
+          setTimeout(() => setShowError(false), 5000);
         }
 
         const sortedQuotes = allQuotes.sort((a, b) => {
@@ -307,6 +310,8 @@ const Analysis: React.FC = () => {
       } catch (error) {
         console.error('Error al obtener cotizaciones de criptomonedas:', error);
         setError('Error al cargar cotizaciones de criptomonedas');
+        setShowError(true);
+        setTimeout(() => setShowError(false), 5000);
       } finally {
         setLoading(false);
       }
@@ -383,7 +388,9 @@ const Analysis: React.FC = () => {
         }
       } catch (error) {
         console.error('Error al obtener cotizaciones de PIX:', error);
-        setError('No se pudieron cargar las cotizaciones de PIX. Por favor, intente más tarde.');
+        setError('No se pudo cargar ninguna cotización de PIX en este momento. Por favor, volvé a intentarlo más tarde.');
+        setShowError(true);
+        setTimeout(() => setShowError(false), 5000);
         setPixQuotes([]);
       }
     };
@@ -591,10 +598,15 @@ const Analysis: React.FC = () => {
 
         <MainSectionTabs />
 
-        {error && (
-            <div className="mb-4 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-700 rounded-lg flex items-center text-red-700 dark:text-red-400">
+        {error && showError && (
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-700 rounded-lg flex items-center text-red-700 dark:text-red-400 relative">
               <AlertCircle size={20} className="mr-2 flex-shrink-0" />
               <span>{error}</span>
+              <button
+                  onClick={() => setShowError(false)}
+                  className="absolute top-2 right-3 text-lg text-red-400 hover:text-red-700 focus:outline-none"
+                  aria-label="Cerrar"
+              >×</button>
             </div>
         )}
 

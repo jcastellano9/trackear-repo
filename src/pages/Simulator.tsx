@@ -73,7 +73,7 @@ const Simulator: React.FC = () => {
 
   // Obtener tasas al montar el componente (integración real)
   useEffect(() => {
-
+    // Refactor: obtener billeteras virtuales primero, luego FCI en paralelo y actualizarlas en caliente
     const fetchRates = async () => {
       try {
         // Plazo fijo
@@ -87,86 +87,83 @@ const Simulator: React.FC = () => {
         }));
         setBankRates(fixedData);
 
-        // Cuentas remuneradas - combinación de API general y billeteras FCI
-        const walletMap = new Map<string, Rate>();
-
-        // Primero, cargamos desde la API general
+        // 1. Cuentas remuneradas generales
+        let walletGeneralData: Rate[] = [];
         try {
           const generalRes = await axios.get('https://api.comparatasas.ar/cuentas-remuneradas');
-          generalRes.data.forEach((item: any) => {
-            walletMap.set(item.nombre, {
-              entity: item.nombre,
-              rate: item.tna,
-              type: 'Cuenta Remunerada',
-              minimumAmount: item.limite,
-              logo: `https://icons.com.ar/logos/${item.nombre.toLowerCase().replace(/\s+/g, '-')}.svg`
-            });
-          });
+          walletGeneralData = generalRes.data.map((item: any) => ({
+            entity: item.nombre,
+            rate: item.tna,
+            type: 'Cuenta Remunerada',
+            minimumAmount: item.limite,
+            logo: `https://icons.com.ar/logos/${item.nombre.toLowerCase().replace(/\s+/g, '-')}.svg`
+          }));
         } catch (e) {
           console.error('Error al obtener cuentas remuneradas generales:', e);
         }
+        // Seteo inmediato de billeteras generales
+        setWalletRates(walletGeneralData);
 
-        // Luego, sobreescribimos (o sumamos) con las billeteras FCI dinámicas
-        const fondos: { nombre: string; url: string; logo: string }[] = [
+        // 2. Endpoints FCI individuales
+        const billeterasFCI = [
           {
-            nombre: 'Prex',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Allaria%20Ahorro%20-%20Clase%20A',
-            logo: 'https://icons.com.ar/logos/prex.svg'
+            nombre: 'Ualá',
+            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Ual%C3%A1%20Ahorro%20-%20Clase%20A',
+            logo: 'https://icons.com.ar/logos/uala.svg'
           },
           {
-            nombre: 'Cocos',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Cocos%20Daruma%20Renta%20Mixta%20-%20Clase%20A',
-            logo: 'https://icons.com.ar/logos/cocos.svg'
+            nombre: 'Brubank',
+            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Brubank%20Ahorro%20-%20Clase%20A',
+            logo: 'https://icons.com.ar/logos/brubank.svg'
           },
           {
-            nombre: 'Personal Pay',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Delta%20Pesos%20-%20Clase%20X',
-            logo: 'https://icons.com.ar/logos/personal-pay.svg'
+            nombre: 'Fiwind',
+            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Fiwind%20Ahorro%20-%20Clase%20A',
+            logo: 'https://icons.com.ar/logos/fiwind.svg'
           },
           {
-            nombre: 'MercadoPago',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Mercado%20Fondo%20-%20Clase%20A',
-            logo: 'https://icons.com.ar/logos/mercadopago.svg'
-          },
-          {
-            nombre: 'LB Finanzas',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/ST%20Zero%20-%20Clase%20D',
-            logo: 'https://icons.com.ar/logos/lb-finanzas.svg'
-          },
-          {
-            nombre: 'AstroPay',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/ST%20Zero%20-%20Clase%20D',
-            logo: 'https://icons.com.ar/logos/astropay.svg'
-          },
-          {
-            nombre: 'Lemon',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Fima%20Premium%20-%20Clase%20P',
-            logo: 'https://icons.com.ar/logos/lemoncash.svg'
+            nombre: 'Naranja X',
+            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Naranja%20X%20Ahorro%20-%20Clase%20A',
+            logo: 'https://icons.com.ar/logos/naranja-x.svg'
           },
         ];
 
-        for (const fondo of fondos) {
-          try {
-            const res = await axios.get(fondo.url);
-            const tna = res.data?.detalle?.rendimientos?.diario?.tna || 0;
-            walletMap.set(fondo.nombre, {
-              entity: fondo.nombre,
-              rate: tna,
-              type: 'Cuenta Remunerada',
-              logo: fondo.logo
-            });
-          } catch (e) {
-            console.error(`Error ${fondo.nombre}:`, e);
-          }
-        }
-
-        const walletData = Array.from(walletMap.values());
-        setWalletRates(walletData);
+        // Lanzar fetches FCI en paralelo, cada uno actualiza su billetera apenas llega
+        billeterasFCI.forEach((billetera) => {
+          (async () => {
+            let tna = 0;
+            try {
+              const res = await axios.get(billetera.url);
+              tna = res.data?.detalle?.rendimientos?.diario?.tna || 0;
+            } catch (e) {
+              console.warn(`Datos no disponibles para ${billetera.nombre}`, e);
+            }
+            // Actualizar sólo esa billetera en walletRates
+            setWalletRates(prev =>
+              // Si ya existe, reemplaza sólo esa billetera; si no, la agrega
+              (() => {
+                const found = prev.some(r => r.entity === billetera.nombre);
+                const updated: Rate = {
+                  entity: billetera.nombre,
+                  rate: tna,
+                  type: 'Cuenta Remunerada',
+                  logo: billetera.logo
+                };
+                if (found) {
+                  return prev.map(r =>
+                    r.entity === billetera.nombre ? { ...r, ...updated } : r
+                  );
+                } else {
+                  return [...prev, updated];
+                }
+              })()
+            );
+          })();
+        });
 
         // Cripto
         const cryptoRes = await axios.get('https://api.comparatasas.ar/v1/finanzas/rendimientos');
         const cryptoData: Rate[] = [];
-
         cryptoRes.data.forEach((exchange: any) => {
           exchange.rendimientos.forEach((item: any) => {
             if (item.apy > 0) {
@@ -174,18 +171,14 @@ const Simulator: React.FC = () => {
                 entity: `${item.moneda} (${exchange.entidad})`,
                 rate: item.apy,
                 type: 'Staking',
-                // logo: `https://icons.com.ar/logos/${item.moneda.toLowerCase()}.svg`,
                 logo: `https://icons.com.ar/logos/${item.moneda.toLowerCase().replace(/\s+/g, '-')}.svg`
               });
             }
           });
         });
-
         setCryptoRates(cryptoData);
       } catch (err) {
         console.error('Error al obtener tasas:', err);
-      } finally {
-        // setLoading(false);
       }
     };
 
@@ -858,7 +851,7 @@ const Simulator: React.FC = () => {
                                                         `cursor-pointer select-none p-2 ${active ? 'bg-purple-100 dark:bg-purple-900/30' : ''}`
                                                     }
                                                 >
-                                                  {rate.entity} ({rate.rate.toFixed(2)}% TNA)
+                                                  {rate.entity} ({rate.rate > 0 ? rate.rate.toFixed(2) + '% TNA' : 'Sin datos'})
                                                 </Combobox.Option>
                                             ))}
                                       </Combobox.Options>
