@@ -224,7 +224,6 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
     'banco-de-corrientes': '/icons/banco-corrientes.svg',
     'banco-de-formosa': '/icons/banco-formosa.svg',
     'banco-ggal': '/icons/banco-galicia.svg',
-    'banco-santander': '/icons/banco-santander.svg',
     'bancor': '/icons/bancor.svg',
     'bbva': '/icons/banco-bbva.svg',
     'galicia+': '/icons/banco-galicia.svg',
