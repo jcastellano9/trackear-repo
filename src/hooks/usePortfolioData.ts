@@ -35,6 +35,63 @@ interface PredefinedAsset {
  * - Incluye lógica de resumen global, filtrado y evolución de capital.
  */
 export function usePortfolioData() {
+  // --- Helpers for Yahoo Finance via AllOrigins ---
+  async function fetchYahooPriceWithAllOrigins(symbol: string): Promise<number | null> {
+    try {
+      const base = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
+      const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(base)}`;
+      const res = await fetch(url);
+      const json = await res.json();
+      const result = json?.chart?.result?.[0];
+      if (!result) return null;
+      // Prefer real-time price when available; fallback to last close in the series
+      let price: number | null =
+        typeof result?.meta?.regularMarketPrice === 'number'
+          ? result.meta.regularMarketPrice
+          : null;
+
+      if (price == null) {
+        const closes = result?.indicators?.quote?.[0]?.close;
+        if (Array.isArray(closes)) {
+          const lastClose = [...closes].filter((n) => typeof n === 'number' && isFinite(n)).at(-1) ?? null;
+          price = typeof lastClose === 'number' && isFinite(lastClose) ? lastClose : null;
+        }
+      }
+      return typeof price === 'number' && isFinite(price) ? price : null;
+    } catch (e) {
+      console.error('Yahoo/AllOrigins fetch error for', symbol, e);
+      return null;
+    }
+  }
+
+  function toYahooBASymbol(ticker: string): string {
+    const t = (ticker || '').toUpperCase().trim();
+    return /\.[A-Z]+$/.test(t) ? t : `${t}.BA`;
+  }
+
+  function getElbstreamLogoUrlBySymbol(symbol: string): string {
+    const sym = (symbol || '').toUpperCase().trim().replace(/\.BA$/, '');
+    return `https://api.elbstream.com/logos/symbol/${encodeURIComponent(sym)}`;
+  }
+
+  /**
+   * Retorna la URL del logo para mostrar en la UI.
+   * - Cripto: intenta usar el logo de CoinGecko ya presente en `predefinedAssets`.
+   * - Acción/CEDEAR: usa Elbstream por símbolo (sin sufijo .BA).
+   */
+  function getLogoUrl(ticker: string, type: Investment['type']): string {
+    if (!ticker) return '';
+    const t = ticker.toUpperCase().trim();
+    if (type === 'Cripto') {
+      const found = predefinedAssets.find(
+        (a) => a.type === 'Cripto' && a.ticker.toUpperCase() === t
+      );
+      if (found?.logo) return found.logo;
+      // Fallback vacío para cripto si no hay imagen de CoinGecko
+      return '';
+    }
+    return getElbstreamLogoUrlBySymbol(t);
+  }
   // Verifica si el precio es numérico, finito y dentro de un rango razonable.
   function isValidPrice(price: number) {
     return typeof price === "number" && isFinite(price) && price > 0 && price < 10000000;
@@ -144,72 +201,98 @@ export function usePortfolioData() {
     fetchCCL();
   }, []);
 
-  // Fetch predefined assets (criptos, CEDEARs y acciones)
+  // Fetch predefined assets (solo criptos). Acciones/CEDEARs se cotizan con Yahoo + AllOrigins más abajo.
   useEffect(() => {
     const fetchAssets = async () => {
       try {
-        // Criptos
+        // Criptos (USD)
         const cryptoRes = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd');
         const cryptoData = await cryptoRes.json();
-        const formattedAssets: PredefinedAsset[] = cryptoData.map((coin: any) => ({
-          ticker: coin.symbol.toUpperCase(),
-          name: coin.name,
+        const formattedAssets: PredefinedAsset[] = (Array.isArray(cryptoData) ? cryptoData : []).map((coin: any) => ({
+          ticker: (coin?.symbol ?? '').toString().toUpperCase(),
+          name: coin?.name ?? '',
           type: 'Cripto',
-          logo: coin.image,
-          price: coin.current_price,
-          id: coin.id,
+          logo: coin?.image,
+          price: Number(coin?.current_price) || 0,
+          id: coin?.id,
         }));
-        // Paginated fetch for CEDEARs
-        let cedearsRaw: any[] = [];
-        let pageCE = 1;
-        let totalPagesCE = 1;
-        do {
-          const res = await fetch(`https://api.cedears.ar/cedears?page=${pageCE}`);
-          const json = await res.json();
-          cedearsRaw = cedearsRaw.concat(json.data ?? []);
-          totalPagesCE = json.pagination?.totalPages ?? 1;
-          pageCE++;
-        } while (pageCE <= totalPagesCE);
-        const cedears: PredefinedAsset[] = cedearsRaw.map((item: any) => ({
-          ticker: item.ticker,
-          name: item.name,
-          type: 'CEDEAR',
-          logo: item.icon,
-          price: item.ars?.c,
-        }));
-        // Paginated fetch for Acciones
-        let accionesRawArr: any[] = [];
-        let pageAC = 1;
-        let totalPagesAC = 1;
-        do {
-          const res = await fetch(`https://api.cedears.ar/acciones?page=${pageAC}`);
-          const json = await res.json();
-          accionesRawArr = accionesRawArr.concat(json.data ?? []);
-          totalPagesAC = json.pagination?.totalPages ?? 1;
-          pageAC++;
-        } while (pageAC <= totalPagesAC);
-        const acciones: PredefinedAsset[] = accionesRawArr.map((item: any) => ({
-          ticker: item.ticker,
-          name: item.name,
-          type: 'Acción',
-          logo: item.imagen || item.icon,
-          price: item.ars?.c,
-        }));
-        setPredefinedAssets([...formattedAssets, ...cedears, ...acciones]);
-        // Market prices lookup
+
+        setPredefinedAssets(formattedAssets);
+
+        // Seed de precios de mercado: solo cripto aquí (el resto se setea con Yahoo/AllOrigins)
         const prices: Record<string, number> = {};
-        [...formattedAssets, ...cedears, ...acciones].forEach(a => {
+        formattedAssets.forEach((a) => {
           if (isValidPrice(a.price)) {
             prices[a.type + '-' + a.ticker] = a.price;
           }
         });
         setMarketPrices(prices);
       } catch (error) {
-        console.error('Error fetching assets', error);
+        console.error('Error fetching crypto assets', error);
       }
     };
     fetchAssets();
   }, []);
+
+  // --- Precios en tiempo real para Acciones y CEDEARs usando Yahoo Finance + AllOrigins ---
+  useEffect(() => {
+    if (!investments.length) return;
+
+    // Conjunto de tickers (sin tipo) presentes en inversiones que NO sean cripto
+    const symbols = Array.from(
+      new Set(
+        investments
+          .filter((inv) => inv.type === 'Acción' || inv.type === 'CEDEAR')
+          .map((inv) => inv.ticker.toUpperCase().trim())
+          .filter(Boolean)
+      )
+    );
+
+    if (!symbols.length) return;
+
+    let cancelled = false;
+
+    (async () => {
+      // Pedimos todas en paralelo
+      const tasks = symbols.map(async (t) => {
+        const ySymbol = toYahooBASymbol(t); // p.ej. BMA -> BMA.BA ; AAPL -> AAPL.BA
+        const price = await fetchYahooPriceWithAllOrigins(ySymbol);
+        return { baseTicker: t, ySymbol, price };
+      });
+
+      const settled = await Promise.allSettled(tasks);
+
+      if (cancelled) return;
+
+      const updates: Record<string, number> = {};
+      settled.forEach((r) => {
+        if (r.status === 'fulfilled') {
+          const { baseTicker, price } = r.value;
+          if (typeof price === 'number' && isValidPrice(price)) {
+            // Actualizamos el precio para cada inversión que tenga ese ticker (distinguiendo por tipo)
+            investments
+              .filter(
+                (inv) =>
+                  inv.ticker.toUpperCase().trim() === baseTicker &&
+                  (inv.type === 'Acción' || inv.type === 'CEDEAR')
+              )
+              .forEach((inv) => {
+                const key = inv.type + '-' + inv.ticker.toUpperCase();
+                updates[key] = price!;
+              });
+          }
+        }
+      });
+
+      if (Object.keys(updates).length) {
+        setMarketPrices((prev) => ({ ...prev, ...updates }));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [investments]);
 
   // Mapa rápido para lookup por tipo+ticker
   const assetMap = useMemo(() => {
@@ -790,5 +873,6 @@ export function usePortfolioData() {
     getDisplayedInvestments,
     getResumenDashboardFiltrado,
     getCapitalEvolutionData,
+    getLogoUrl,
   };
 }

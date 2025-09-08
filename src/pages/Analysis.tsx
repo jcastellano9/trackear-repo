@@ -201,12 +201,19 @@ const Analysis: React.FC = () => {
                   } else {
                     usdName = `USD ${q.nombre.charAt(0).toUpperCase() + q.nombre.slice(1)}`;
                   }
+                  const isTarjeta = q.nombre.toLowerCase() === 'tarjeta';
+                  const buyVal = typeof q.compra === 'number' ? q.compra : null;
+                  const sellVal = typeof q.venta === 'number' ? q.venta : null;
+                  const tarjetaVal = isTarjeta ? (typeof q.venta === 'number' ? q.venta : null) : null;
                   return {
                     name: usdName,
-                    buy: typeof q.compra === 'number' ? q.compra : null,
-                    sell: typeof q.venta === 'number' ? q.venta : null,
-                    spread: (typeof q.compra === 'number' && typeof q.venta === 'number')
-                        ? +(q.venta - q.compra).toFixed(2) : null,
+                    buy: isTarjeta ? tarjetaVal : buyVal,
+                    sell: isTarjeta ? tarjetaVal : sellVal,
+                    spread: isTarjeta
+                      ? 0
+                      : (typeof q.compra === 'number' && typeof q.venta === 'number')
+                          ? +(q.venta - q.compra).toFixed(2)
+                          : null,
                     source: 'DolarAPI',
                     variation: 0
                   };
@@ -414,26 +421,39 @@ const Analysis: React.FC = () => {
 
   // Ordena las cotizaciones según la opción que haya seleccionado el usuario
   const sortQuotes = (quotes: Quote[]) => {
+    // En PIX/USD el valor mostrado es 1 / buy (R$ que recibís por 1 USD).
+    // Para ordenar coherente con lo visible, usamos un "valor efectivo".
+    const getEffectiveBuy = (q: Quote) => {
+      if (activeQuoteSection === 'pix' && selectedPixSymbol === 'USD') {
+        return typeof q.buy === 'number' && q.buy !== 0 ? 1 / q.buy : -Infinity;
+      }
+      return q.buy ?? -Infinity;
+    };
+    const getEffectiveSell = (q: Quote) => q.sell ?? -Infinity;
+
     return quotes.slice().sort((a, b) => {
       if (sortOption === 'alphabeticalAsc') return a.name.localeCompare(b.name);
       if (sortOption === 'alphabeticalDesc') return b.name.localeCompare(a.name);
-      if (sortOption === 'buyAsc') return (a.buy ?? Infinity) - (b.buy ?? Infinity);
-      if (sortOption === 'buyDesc') return (b.buy ?? -Infinity) - (a.buy ?? -Infinity);
-      if (sortOption === 'sellAsc') return (a.sell ?? Infinity) - (b.sell ?? Infinity);
-      if (sortOption === 'sellDesc') return (b.sell ?? -Infinity) - (a.sell ?? -Infinity);
+      if (sortOption === 'buyAsc') return (getEffectiveBuy(a) ?? Infinity) - (getEffectiveBuy(b) ?? Infinity);
+      if (sortOption === 'buyDesc') return (getEffectiveBuy(b) ?? -Infinity) - (getEffectiveBuy(a) ?? -Infinity);
+      if (sortOption === 'sellAsc') return (getEffectiveSell(a) ?? Infinity) - (getEffectiveSell(b) ?? Infinity);
+      if (sortOption === 'sellDesc') return (getEffectiveSell(b) ?? -Infinity) - (getEffectiveSell(a) ?? -Infinity);
       return 0;
     });
   };
 
   // Identificar mejores cotizaciones PIX para pagar
+  // Siempre minimizamos buy porque:
+  // ARS: menos ARS por 1 R$ conviene;
+  // USD: más R$ por 1 USD ≡ menor `buy`
   const bestPixQuote = pixQuotes
-      .filter(q => selectedPixSymbol ? q.name.toLowerCase().includes(`paga con ${selectedPixSymbol.toLowerCase()}`) : true)
-      .reduce((best, current) => {
-        if (!best || (current.buy !== null && current.buy > (best.buy ?? Infinity))) {
-          return current;
-        }
-        return best;
-      }, null as Quote | null);
+    .filter(q => selectedPixSymbol ? q.name.toLowerCase().includes(`paga con ${selectedPixSymbol.toLowerCase()}`) : true)
+    .reduce((best, current) => {
+      if (!best) return current;
+      const bBuy = typeof best.buy === 'number' ? best.buy : Infinity;
+      const cBuy = typeof current.buy === 'number' ? current.buy : Infinity;
+      return cBuy < bBuy ? current : best;
+    }, null as Quote | null);
   // Mejor cotización PIX en ARS (excluyendo tarjetas)
   const bestArsPixQuote = pixQuotes
       .filter(q => q.name.toLowerCase().includes('paga con ars'))
@@ -515,18 +535,30 @@ const Analysis: React.FC = () => {
 
   // Componente que muestra cada tarjeta de cotización
   const QuoteCard = ({ quote }: { quote: Quote }) => {
-    // Ajuste especial para mostrar la cotización PIX en USD
-    let isPixUsd = activeQuoteSection === 'pix' && selectedPixSymbol === 'USD';
-    let displayLabel = activeQuoteSection === 'pix' ? 'Pagar 1 Real es' : 'Venta';
-    let displayValue: number | null | undefined = quote.buy;
-    if (isPixUsd && typeof quote.buy === 'number' && quote.buy !== 0) {
-      displayValue = 1 / quote.buy;
-    }
+    // Nueva lógica para mostrar cotización y etiqueta según sección y símbolo
+    let displayLabel = '';
+    let displayValue: number | null | undefined = null;
     let displaySuffix = '';
     let displayNote = '';
-    if (isPixUsd) {
-      displaySuffix = 'R$';
-      displayNote = 'para pagar';
+    if (activeQuoteSection === 'pix') {
+      if (selectedPixSymbol === 'USD') {
+        displayLabel = '1 USD son';
+        if (typeof quote.buy === 'number' && quote.buy !== 0) {
+          displayValue = 1 / quote.buy;
+        }
+        displaySuffix = 'R$';
+        displayNote = 'para pagar';
+      } else if (selectedPixSymbol === 'ARS') {
+        displayLabel = '1 Real son';
+        displayValue = quote.buy;
+        displaySuffix = '';
+        displayNote = '';
+      }
+    } else {
+      displayLabel = 'Venta';
+      displayValue = quote.buy;
+      displaySuffix = '';
+      displayNote = '';
     }
     return (
         <motion.div
@@ -554,31 +586,47 @@ const Analysis: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{displayLabel}</p>
-              <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-                {displayValue != null
-                    ? isPixUsd
+          {activeQuoteSection === 'dollar' && quote.name === 'USD Tarjeta' ? (
+            <div className="grid grid-cols-1 gap-2">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Tarjeta</p>
+                <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+                  {typeof quote.sell === 'number'
+                    ? formatCurrency(quote.sell)
+                    : typeof quote.buy === 'number'
+                      ? formatCurrency(quote.buy)
+                      : 'N/A'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{displayLabel}</p>
+                <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+                  {displayValue != null
+                    ? (activeQuoteSection === 'pix' && selectedPixSymbol === 'USD'
                         ? ` ${displayValue.toFixed(2)} ${displaySuffix}`
                         : formatCurrency(displayValue)
+                      )
                     : 'N/A'}
-              </p>
-              {isPixUsd && (
+                </p>
+                {(activeQuoteSection === 'pix' && selectedPixSymbol === 'USD') && (
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{displayNote}</p>
+                )}
+              </div>
+              {activeQuoteSection !== 'pix' && (
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Compra</p>
+                    <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+                      {typeof quote.sell === 'number'
+                          ? formatCurrency(quote.sell)
+                          : 'N/A'}
+                    </p>
+                  </div>
               )}
             </div>
-            {activeQuoteSection !== 'pix' && (
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Compra</p>
-                  <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-                    {typeof quote.sell === 'number'
-                        ? formatCurrency(quote.sell)
-                        : 'N/A'}
-                  </p>
-                </div>
-            )}
-          </div>
+          )}
         </motion.div>
     );
   };

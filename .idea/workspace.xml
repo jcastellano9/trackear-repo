@@ -6,10 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="5a57cfc4-1995-429b-a991-73bddbccd1fc" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/_metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/_metadata.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/react-chartjs-2.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/react-chartjs-2.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy-server.js" beforeDir="false" afterPath="$PROJECT_DIR$/proxy-server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/usePortfolioData.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/usePortfolioData.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/pages/Analysis.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Analysis.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/pages/Portfolio.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Portfolio.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/Simulator.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Simulator.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/YieldAnalysis.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/YieldAnalysis.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,6 +51,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "JavaScript Debug.localhost:5174.executor": "Debug",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
@@ -75,6 +79,16 @@
       <recent name="$PROJECT_DIR$/src/hooks" />
       <recent name="$PROJECT_DIR$" />
     </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="localhost:5174" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:5174">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JavaScript Debug.localhost:5174" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>

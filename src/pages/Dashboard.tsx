@@ -343,10 +343,13 @@ const Dashboard: React.FC = () => {
           const quotes: DollarQuote[] = response.data.map((item: any) => {
             const rawName = item.nombre;
             const name = rawName === 'Contado con liquidación' ? 'CCL' : rawName;
+            const isTarjeta = name === 'Tarjeta';
+            const buy = isTarjeta ? item.venta : item.compra;
+            const sell = isTarjeta ? item.venta : item.venta;
             return {
               name,
-              buy: item.compra,
-              sell: item.venta,
+              buy,
+              sell,
               variation: item.variacion ?? null
             };
           });
@@ -773,16 +776,25 @@ const Dashboard: React.FC = () => {
                         <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-center">
                           {dollarEmoji[quote.name] || ''} {quote.name}
                         </h3>
-                        <div className="grid grid-cols-2 gap-4 justify-items-center">
-                          <div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 text-center">Venta</div>
-                            <div className="font-medium text-gray-800 dark:text-gray-100">{formatARS(quote.sell)}</div>
+                        {quote.name === 'Tarjeta' ? (
+                          <div className="grid grid-cols-1 gap-2 justify-items-center">
+                            <div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 text-center">Tarjeta</div>
+                              <div className="font-medium text-gray-800 dark:text-gray-100">{formatARS(typeof quote.sell === 'number' ? quote.sell : quote.buy)}</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 text-center">Compra</div>
-                            <div className="font-medium text-gray-800 dark:text-gray-100">{formatARS(quote.buy)}</div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-4 justify-items-center">
+                            <div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 text-center">Venta</div>
+                              <div className="font-medium text-gray-800 dark:text-gray-100">{formatARS(quote.sell)}</div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 text-center">Compra</div>
+                              <div className="font-medium text-gray-800 dark:text-gray-100">{formatARS(quote.buy)}</div>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                   ))}
                 </div>

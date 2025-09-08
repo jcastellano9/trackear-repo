@@ -49,7 +49,8 @@ const Portfolio: React.FC = () => {
     setSuccess,
     exportToCSV,
     getResumenGlobalFiltrado,
-    ppcMap
+    ppcMap,
+    getLogoUrl,
   } = usePortfolioData();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -817,9 +818,13 @@ const Portfolio: React.FC = () => {
                             <td className="py-4 px-4">
                               <div className="flex items-center gap-2">
                                 <img
-                                    src={predefinedAssets.find(a => a.ticker === investment.ticker)?.logo}
-                                    alt={investment.ticker}
-                                    className="w-5 h-5 rounded-full object-contain"
+                                  src={getLogoUrl(investment.ticker, investment.type)}
+                                  alt={`${investment.ticker} logo`}
+                                  className="w-5 h-5 rounded-full object-contain"
+                                  onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = '/icons/default-asset.svg';
+                                  }}
                                 />
                                 <span className="font-medium text-gray-800">{investment.ticker}</span>
                               </div>
