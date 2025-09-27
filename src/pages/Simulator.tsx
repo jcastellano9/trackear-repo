@@ -61,7 +61,7 @@ const Simulator: React.FC = () => {
   const [installmentCount, setInstallmentCount] = useState('');
   interface InstallmentResult {
     totalFinanced: number;
-    cft: number;
+    cftPlan: number; // CFT del plan (sobre todo el período)
     suggestion: 'Cuotas' | 'Contado';
     adjustedInstallments: number[];
     inflationRate: number;
@@ -76,102 +76,44 @@ const Simulator: React.FC = () => {
     // Refactor: obtener billeteras virtuales primero, luego FCI en paralelo y actualizarlas en caliente
     const fetchRates = async () => {
       try {
-        // Plazo fijo
-        const fixedRes = await axios.get('https://api.comparatasas.ar/plazos-fijos');
-        const fixedData = fixedRes.data.map((item: any) => ({
-          entity: item.entidad,
-          rate: item.tnaClientes ? parseFloat((item.tnaClientes * 100).toFixed(2)) : 0,
+        // Plazo fijo (ArgentinaDatos)
+        const fixedRes = await axios.get('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo/');
+        const fixedData = (Array.isArray(fixedRes.data) ? fixedRes.data : []).map((item: any) => ({
+          entity: item.entidad || item.banco || item.nombre || 'Entidad',
+          // La API a veces trae fracción (0.35) u % (35): normalizamos a %
+          rate: typeof item.tnaClientes === 'number' ? (item.tnaClientes <= 1 ? item.tnaClientes * 100 : item.tnaClientes)
+               : typeof item.tna === 'number' ? (item.tna <= 1 ? item.tna * 100 : item.tna)
+               : 0,
           type: 'Plazo Fijo',
           minimumAmount: null,
-          logo: `https://icons.com.ar/logos/${item.entidad.toLowerCase().replace(/\s+/g, '-')}.svg`
+          logo: `https://icons.com.ar/logos/${(item.entidad || 'banco').toLowerCase().replace(/\s+/g, '-')}.svg`
         }));
         setBankRates(fixedData);
 
-        // 1. Cuentas remuneradas generales
-        let walletGeneralData: Rate[] = [];
-        try {
-          const generalRes = await axios.get('https://api.comparatasas.ar/cuentas-remuneradas');
-          walletGeneralData = generalRes.data.map((item: any) => ({
-            entity: item.nombre,
-            rate: item.tna,
-            type: 'Cuenta Remunerada',
-            minimumAmount: item.limite,
-            logo: `https://icons.com.ar/logos/${item.nombre.toLowerCase().replace(/\s+/g, '-')}.svg`
-          }));
-        } catch (e) {
-          console.error('Error al obtener cuentas remuneradas generales:', e);
-        }
-        // Seteo inmediato de billeteras generales
-        setWalletRates(walletGeneralData);
+        // Billeteras virtuales / FCI otros (ArgentinaDatos)
+        const walletsRes = await axios.get('https://api.argentinadatos.com/v1/finanzas/fci/otros/ultimo/');
+        const walletData = (Array.isArray(walletsRes.data) ? walletsRes.data : []).map((w: any) => ({
+          entity: w.fondo || w.nombre || 'Billetera',
+          rate: typeof w.tna === 'number' ? (w.tna <= 1 ? w.tna * 100 : w.tna) : 0,
+          type: 'Cuenta Remunerada',
+          minimumAmount: w.tope ?? null,
+          logo: `https://icons.com.ar/logos/${(w.fondo || 'billetera').toLowerCase().replace(/\s+/g, '-')}.svg`
+        }));
+        setWalletRates(walletData);
 
-        // 2. Endpoints FCI individuales
-        const billeterasFCI = [
-          {
-            nombre: 'Ualá',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Ual%C3%A1%20Ahorro%20-%20Clase%20A',
-            logo: 'https://icons.com.ar/logos/uala.svg'
-          },
-          {
-            nombre: 'Brubank',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Brubank%20Ahorro%20-%20Clase%20A',
-            logo: 'https://icons.com.ar/logos/brubank.svg'
-          },
-          {
-            nombre: 'Fiwind',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Fiwind%20Ahorro%20-%20Clase%20A',
-            logo: 'https://icons.com.ar/logos/fiwind.svg'
-          },
-          {
-            nombre: 'Naranja X',
-            url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Naranja%20X%20Ahorro%20-%20Clase%20A',
-            logo: 'https://icons.com.ar/logos/naranja-x.svg'
-          },
-        ];
-
-        // Lanzar fetches FCI en paralelo, cada uno actualiza su billetera apenas llega
-        billeterasFCI.forEach((billetera) => {
-          (async () => {
-            let tna = 0;
-            try {
-              const res = await axios.get(billetera.url);
-              tna = res.data?.detalle?.rendimientos?.diario?.tna || 0;
-            } catch (e) {
-              console.warn(`Datos no disponibles para ${billetera.nombre}`, e);
-            }
-            // Actualizar sólo esa billetera en walletRates
-            setWalletRates(prev =>
-              // Si ya existe, reemplaza sólo esa billetera; si no, la agrega
-              (() => {
-                const found = prev.some(r => r.entity === billetera.nombre);
-                const updated: Rate = {
-                  entity: billetera.nombre,
-                  rate: tna,
-                  type: 'Cuenta Remunerada',
-                  logo: billetera.logo
-                };
-                if (found) {
-                  return prev.map(r =>
-                    r.entity === billetera.nombre ? { ...r, ...updated } : r
-                  );
-                } else {
-                  return [...prev, updated];
-                }
-              })()
-            );
-          })();
-        });
-
-        // Cripto
-        const cryptoRes = await axios.get('https://api.comparatasas.ar/v1/finanzas/rendimientos');
+        // Cripto (ArgentinaDatos)
+        const cryptoRes = await axios.get('https://api.argentinadatos.com/v1/finanzas/rendimientos/');
         const cryptoData: Rate[] = [];
-        cryptoRes.data.forEach((exchange: any) => {
-          exchange.rendimientos.forEach((item: any) => {
-            if (item.apy > 0) {
+        (Array.isArray(cryptoRes.data) ? cryptoRes.data : []).forEach((exchange: any) => {
+          (Array.isArray(exchange.rendimientos) ? exchange.rendimientos : []).forEach((item: any) => {
+            // APY viene como porcentaje ya (ej: 8.5 = 8.5%)
+            const apy = typeof item.apy === 'number' ? item.apy : 0;
+            if (apy > 0) {
               cryptoData.push({
-                entity: `${item.moneda} (${exchange.entidad})`,
-                rate: item.apy,
+                entity: `${item.moneda || item.symbol} (${exchange.entidad || exchange.nombre})`,
+                rate: apy,
                 type: 'Staking',
-                logo: `https://icons.com.ar/logos/${item.moneda.toLowerCase().replace(/\s+/g, '-')}.svg`
+                logo: `https://assets.coincap.io/assets/icons/${(item.moneda || '').toLowerCase()}@2x.png`
               });
             }
           });
@@ -303,20 +245,15 @@ const Simulator: React.FC = () => {
     // Proyección Plazo Fijo usando TNA compuesta mensualmente
     const pfProjection = cash * Math.pow(1 + avgBankRate / 100 / 12, count);
 
-    // CFT corregido (anualizado)
-    // Nuevo cálculo usando tasa efectiva anual realista
-    // Cálculo del CFT usando monto nominal financiado
-    const monthlyRate = Math.pow(totalInstallment / cash, 1 / count) - 1;
-    if (monthlyRate <= -1) {
-      setError('Los datos ingresados generan un CFT inválido. Verificá los montos.');
-      return;
-    }
-    const cft = (Math.pow(1 + monthlyRate, 12) - 1) * 100;
+    // CFT del plan (sobre el período completo): independiente de la cantidad de cuotas
+    // Si total en cuotas duplica al contado, cftPlan = 100% tanto en 6 como en 12 cuotas.
+    const cftPlan = ((totalInstallment / cash) - 1) * 100;
+
     const suggestion = totalAdjusted < cash * 1.05 ? 'Cuotas' : 'Contado';
 
     setInstallmentResult({
       totalFinanced,
-      cft,
+      cftPlan,
       suggestion,
       adjustedInstallments,
       inflationRate,
@@ -495,12 +432,18 @@ const Simulator: React.FC = () => {
                         Precio de contado
                       </label>
                       <input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           id="cashPrice"
-                          value={cashPrice}
-                          onChange={(e) => setCashPrice(e.target.value)}
+                          value={cashPrice.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\./g, '');
+                            if (/^\d*$/.test(raw)) {
+                              setCashPrice(raw);
+                            }
+                          }}
                           className="w-full px-4 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          placeholder="Ej: 100000"
+                          placeholder="Ej: 100.000"
                       />
                     </div>
                     <div>
@@ -508,12 +451,18 @@ const Simulator: React.FC = () => {
                         Precio total en cuotas
                       </label>
                       <input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           id="installmentAmount"
-                          value={installmentAmount}
-                          onChange={(e) => setInstallmentAmount(e.target.value)}
+                          value={installmentAmount.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\./g, '');
+                            if (/^\d*$/.test(raw)) {
+                              setInstallmentAmount(raw);
+                            }
+                          }}
                           className="w-full px-4 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          placeholder="Ej: 120000"
+                          placeholder="Ej: 120.000"
                       />
                     </div>
                     <div>
@@ -560,21 +509,21 @@ const Simulator: React.FC = () => {
                       Comparar
                     </button>
                     {installmentResult && (
-                        <div className={`mt-6 p-4 rounded-lg text-sm text-left font-medium ${
+                        <div className={`mt-6 p-5 rounded-xl text-base text-left font-semibold ${
                             installmentResult.suggestion === 'Cuotas'
                                 ? 'bg-green-100 text-green-700 border border-green-300 dark:bg-green-900/20 dark:text-green-300 dark:border-green-600'
                                 : 'bg-red-100 text-red-700 border border-red-300 dark:bg-red-900/20 dark:text-red-300 dark:border-red-600'
                         }`}>
-                          <p className="font-semibold mb-1">
+                          <p className="text-xl font-extrabold mb-1 tracking-tight">
                             Recomendación: {installmentResult.suggestion === 'Cuotas' ? '💳 Cuotas' : '💵 Contado'}
                           </p>
-                          <p className="text-sm">
+                          <p className="text-base leading-snug">
                             {installmentResult.suggestion === 'Cuotas'
                                 ? 'La suma de las cuotas ajustadas por inflación es menor al valor de contado.'
                                 : 'El valor actualizado de las cuotas es mayor al precio de contado considerando la inflación estimada.'}
                           </p>
                           {monthlyInflation !== null && (
-                              <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                              <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">
                                 Inflación mensual esperada según BCRA: {monthlyInflation.toFixed(2)}% (~{((Math.pow(1 + (monthlyInflation / 100), 12) - 1) * 100).toFixed(2)}% anual)
                               </p>
                           )}
@@ -591,7 +540,7 @@ const Simulator: React.FC = () => {
                     {installmentResult && (
                         <>
                           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-600 rounded-xl shadow-sm space-y-4">
-                            <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 uppercase tracking-wide mb-1">
+                            <p className="text-base font-bold text-yellow-800 dark:text-yellow-200 uppercase tracking-wide mb-2">
                               Análisis de cuotas
                             </p>
                             {/* Cuotas ajustadas por inflación acumulada - PRIMERO */}
@@ -601,7 +550,7 @@ const Simulator: React.FC = () => {
                                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm text-gray-600 dark:text-gray-400">
                                     {installmentResult.adjustedInstallments.map((v, i) => (
                                         <div key={i} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-1">
-                                          Cuota #{i + 1}: ${v.toFixed(0)}
+                                          <span className="font-medium">Cuota #{i + 1}:</span> <span className="font-semibold">${v.toFixed(0)}</span>
                                         </div>
                                     ))}
                                   </div>
@@ -609,30 +558,30 @@ const Simulator: React.FC = () => {
                             )}
                             {/* Total financiado */}
                             <div className="flex justify-between items-center border-b border-yellow-100 dark:border-yellow-600 pb-2">
-                              <span className="text-sm text-gray-600 dark:text-gray-300">Total financiado:</span>
-                              <span className="font-semibold text-yellow-800 dark:text-yellow-400 text-sm">
-                          {formatCurrency(installmentResult.totalFinanced)}
-                        </span>
+                              <span className="text-base font-semibold text-gray-700 dark:text-gray-200">Total financiado</span>
+                              <span className="text-xl font-extrabold text-yellow-800 dark:text-yellow-300">
+                                {formatCurrency(installmentResult.totalFinanced)}
+                              </span>
                             </div>
-                            {/* CFT anual efectivo */}
+                            {/* CFT del plan (sobre el período completo) */}
                             <div className="flex justify-between items-center border-b border-yellow-100 dark:border-yellow-600 pb-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                          Costo Financiero Total (CFT anual efectivo)
-                        </span>
-                              <span className="font-semibold text-yellow-600 text-sm">
-                          {installmentResult.cft.toFixed(2)}%
-                        </span>
+                              <span className="text-sm text-gray-600 dark:text-gray-300">
+                                Costo Financiero Total del plan (CFT sobre el período)
+                              </span>
+                              <span className="text-lg font-bold text-yellow-700">
+                                {installmentResult.cftPlan.toFixed(2)}%
+                              </span>
                             </div>
                             {/* Explicación CFT */}
                             <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                              El CFT anual efectivo refleja el costo total del financiamiento. Se calcula como la tasa anual compuesta que iguala el valor de las cuotas al precio contado. Si da negativo o 0%, puede deberse a montos inconsistentes.
+                              El CFT del plan refleja el costo total del financiamiento respecto del precio de contado en todo el período de cuotas (no se anualiza).
                             </div>
                             {/* Inflación mensual estimada */}
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-gray-600 dark:text-gray-300">Inflación mensual estimada:</span>
-                              <span className="font-medium text-yellow-700 text-sm">
-                          {installmentResult.inflationRate.toFixed(2)}%
-                        </span>
+                              <span className="text-base font-semibold text-yellow-800">
+                                {installmentResult.inflationRate.toFixed(2)}%
+                              </span>
                             </div>
                           </div>
                           {/* Simulación alternativa */}
@@ -690,10 +639,16 @@ const Simulator: React.FC = () => {
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{selectedCrypto || 'Ξ'}</span>
                         )}
                         <input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             id="amount"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
+                            value={amount.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\./g, '');
+                              if (/^\d*$/.test(raw)) {
+                                setAmount(raw);
+                              }
+                            }}
                             className={`w-full ${simulationType === 'crypto' ? 'pl-20' : 'pl-8'} pr-3 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                             placeholder="0"
                         />
@@ -903,12 +858,6 @@ const Simulator: React.FC = () => {
                           </select>
                           {selectedCrypto && (
                               <div className="flex items-center space-x-2">
-                                <img
-                                    src={cryptoRates.find(r => r.entity.startsWith(selectedCrypto))?.logo}
-                                    alt={selectedCrypto}
-                                    className="w-6 h-6 object-contain"
-                                    onError={(e) => (e.currentTarget.style.display = 'none')}
-                                />
                               </div>
                           )}
                           {selectedCrypto && (
@@ -956,12 +905,6 @@ const Simulator: React.FC = () => {
                                 </Combobox>
                                 {selectedEntity && (
                                     <div className="flex items-center space-x-2">
-                                      <img
-                                          src={cryptoRates.find(r => r.entity === selectedEntity)?.logo}
-                                          alt={selectedEntity}
-                                          className="w-6 h-6 object-contain"
-                                          onError={(e) => (e.currentTarget.style.display = 'none')}
-                                      />
                                       {selectedEntity && !selectedEntity.includes('(') && (
                                           <span className="text-sm text-gray-700 dark:text-gray-100 truncate">{selectedEntity}</span>
                                       )}

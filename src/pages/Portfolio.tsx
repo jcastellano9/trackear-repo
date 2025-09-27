@@ -29,6 +29,38 @@ interface NewInvestment {
 
 
 // Componente Portfolio: maneja estado y renderiza la interfaz de cartera de inversiones
+
+const AssetLogo: React.FC<{ ticker: string; type: Investment['type']; getLogoUrl?: (ticker: string, type: Investment['type']) => string }> = ({ ticker, type, getLogoUrl }) => {
+  const [failed, setFailed] = React.useState(false);
+
+  // Preferimos la URL local/propia si existe, y dejamos que onError active el fallback visual.
+  const src = getLogoUrl ? getLogoUrl(ticker, type) : '';
+
+  if (failed || !src) {
+    // Fallback: círculo con las primeras 3 letras del ticker
+    return (
+      <div
+        className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-[10px] leading-5 text-gray-700 dark:text-gray-200 font-semibold flex items-center justify-center select-none"
+        title={ticker}
+        aria-label={`${ticker} sin logo, usando placeholder`}
+      >
+        {ticker.slice(0, 3).toUpperCase()}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={`${ticker} logo`}f51
+      className="w-5 h-5 rounded-full object-contain"
+      onError={() => setFailed(true)}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+    />
+  );
+};
 const Portfolio: React.FC = () => {
   // useState: definiciones de estados para búsqueda, filtros, modales, precios, etc.
   const {
@@ -817,14 +849,10 @@ const Portfolio: React.FC = () => {
                             )}
                             <td className="py-4 px-4">
                               <div className="flex items-center gap-2">
-                                <img
-                                  src={getLogoUrl(investment.ticker, investment.type)}
-                                  alt={`${investment.ticker} logo`}
-                                  className="w-5 h-5 rounded-full object-contain"
-                                  onError={(e) => {
-                                    e.currentTarget.onerror = null;
-                                    e.currentTarget.src = '/icons/default-asset.svg';
-                                  }}
+                                <AssetLogo
+                                  ticker={investment.ticker}
+                                  type={investment.type}
+                                  getLogoUrl={getLogoUrl}
                                 />
                                 <span className="font-medium text-gray-800">{investment.ticker}</span>
                               </div>

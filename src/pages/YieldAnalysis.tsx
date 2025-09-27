@@ -51,12 +51,15 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      try {
-        const [billeterasRes, plazosRes, criptoRes] = await Promise.all([
-          fetch('https://api.comparatasas.ar/cuentas-remuneradas'),
-          fetch('https://api.comparatasas.ar/plazos-fijos'),
-          fetch('https://api.comparatasas.ar/v1/finanzas/rendimientos')
-        ]);
+             try {
+                const [billeterasRes, plazosRes, criptoRes] = await Promise.all([
+                    // Billeteras virtuales (otros FCI)
+                    fetch('https://api.argentinadatos.com/v1/finanzas/fci/otros/ultimo/'),
+                    // Plazos fijos
+                    fetch('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo/'),
+                    // Rendimientos cripto
+                    fetch('https://api.argentinadatos.com/v1/finanzas/rendimientos/')
+                ]);
 
         if (!billeterasRes.ok || !plazosRes.ok || !criptoRes.ok) {
           throw new Error('Error al obtener los datos desde la API.');
@@ -66,44 +69,43 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
         const plazosData = await plazosRes.json();
         const criptoData = await criptoRes.json();
 
-        const billeteraFondos = [
-          { nombre: 'Prex', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Allaria%20Ahorro%20-%20Clase%20A' },
-          { nombre: 'Cocos', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Cocos%20Daruma%20Renta%20Mixta%20-%20Clase%20A' },
-          { nombre: 'Personal Pay', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Delta%20Pesos%20-%20Clase%20X' },
-          { nombre: 'MercadoPago', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Mercado%20Pago%20-%20Clase%20A' },
-          { nombre: 'LB Finanzas', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/ST%20Zero%20-%20Clase%20D' },
-          { nombre: 'Lemon', url: 'https://good-cafci.comparatasas.ar/v1/finanzas/fci/detalle/nombre/Fima%20Premium%20-%20Clase%20P' }
-        ];
-
-        const billeteraFetches = await Promise.allSettled(
-          billeteraFondos.map(fondo => fetch(fondo.url).then(async res => {
-            if (!res.ok) throw new Error('404');
-            const json = await res.json();
-            return {
-              nombre: fondo.nombre,
-              tna: json?.detalle?.rendimientos?.diario?.tna || 0,
-              limite: 0,
-              url: fondo.url
-            };
-          }))
+        const normalizePercent = (val: any) => (typeof val === 'number' ? (val <= 1 ? val * 100 : val) : 0);
+        const normalizeFraction = (val: any) => (typeof val === 'number' ? (val <= 1 ? val : val / 100) : 0);
+        const normalizeCryptoPercent = (val: any) => (
+          typeof val === 'number' ? (val > 100 ? 100 : val) : 0
         );
 
-        const billeterasExtras = billeteraFetches
-          .filter(r => r.status === 'fulfilled')
-          .map(r => (r as PromiseFulfilledResult<Billetera>).value);
+        // Billeteras (ArgentinaDatos otros/ultimo): queremos % directo en `tna`
+        const billeterasMapped: Billetera[] = (Array.isArray(billeterasData) ? billeterasData : []).map((item: any) => ({
+          nombre: item.fondo || item.nombre || item.entidad || 'N/A',
+          tna: normalizePercent(item.tna),
+          limite: item.tope ?? item.limite ?? 0,
+        }));
 
-        if (process.env.NODE_ENV === 'development') {
-          billeteraFetches.forEach((res, i) => {
-            if (res.status === 'rejected') {
-              // eslint-disable-next-line no-console
-              console.warn(`⚠️ Error al obtener datos de: ${billeteraFondos[i].nombre}`);
-            }
-          });
-        }
+        // Plazos fijos (ArgentinaDatos tasas/plazoFijo): el UI espera fracción en `tnaClientes` (luego multiplica x100 al renderizar)
+        const plazosMapped: PlazoFijo[] = (Array.isArray(plazosData) ? plazosData : []).map((p: any) => ({
+          entidad: p.entidad || p.banco || p.nombre || 'Entidad',
+          logo: '',
+          tnaClientes: normalizeFraction(p.tnaClientes ?? p.tna),
+          enlace: p.enlace || p.link || undefined,
+        }));
 
-        setBilleteras([...billeterasData, ...billeterasExtras]);
-        setPlazosFijos(plazosData);
-        setCripto(criptoData);
+        // Cripto (ArgentinaDatos rendimientos): asegurar que `apy` esté en %
+        const criptoMapped: CriptoEntidad[] = (Array.isArray(criptoData) ? criptoData : []).map((e: any) => ({
+          entidad: e.entidad || e.nombre || 'Entidad',
+          logo: e.logo || '',
+          url: e.url || undefined,
+          rendimientos: Array.isArray(e.rendimientos)
+            ? e.rendimientos.map((r: any) => ({
+                moneda: r.moneda || r.symbol || '',
+                apy: normalizeCryptoPercent(r.apy ?? r.tna ?? r.tea ?? 0),
+              }))
+            : [],
+        }));
+
+        setBilleteras(billeterasMapped);
+        setPlazosFijos(plazosMapped);
+        setCripto(criptoMapped);
       } catch (err: any) {
         console.error(err);
         setError('Hubo un error al cargar los datos. Por favor, intenta nuevamente más tarde.');
@@ -152,82 +154,149 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
     return max;
   };
 
+  // --- helpers to resolve logos in /public/icons ---
+  const slugify = (s: string) =>
+    (s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // remove accents
+      .replace(/&/g, " y ")
+      .replace(/\./g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b(s\/a|s\.?a\.?u?|s\.?a\.?|saic|sac)\b/g, "") // remove company suffixes
+      .replace(/\s+/g, "-"); // spaces -> hyphens
+
+  const resolveIcon = (rawName: string) => {
+    const base = slugify(rawName);
+
+    // Common alias rules (bancos con nombres largos o variantes)
+    const aliasRules: Array<[RegExp, string]> = [
+      [/provincia-de-buenos-aires/, "banco-provincia"],
+      [/provincia-del-neuquen/, "banco-provincia"],
+      [/provincia-de-cordoba|banco-de-cordoba|cordoba/, "bancor"],
+      [/nacion/, "banco-nacion"],
+      [/galicia/, "banco-galicia"],
+      [/ggal/, "banco-galicia"],
+      [/bbva/, "banco-bbva"],
+      [/ciudad(-de-buenos-aires)?/, "banco-ciudad"],
+      [/hipotecario/, "banco-hipotecario"],
+      [/macro/, "banco-macro"],
+      [/supervielle/, "banco-supervielle"],
+      [/icbc/, "banco-icbc"],
+      [/santander/, "banco-santander"],
+      [/formosa/, "banco-formosa"],
+      [/corrientes/, "banco-corrientes"],
+      [/chubut/, "banco-del-chubut"],
+      [/mariva/, "banco-mariva"],
+      [/meridian/, "banco-meridian"],
+      [/masventas/, "banco-masventas"],
+      [/bica/, "banco-bica"],
+      [/comafi/, "banco-comafi"],
+      [/credicoop/, "banco-credicoop"],
+      [/itau|itaú/, "banco-itau"],
+      [/hsbc/, "banco-hsbc"],
+      [/columbia/, "banco-columbia"],
+      [/patagonia/, "banco-patagonia"],
+      [/piano/, "banco-piano"],
+      // billeteras y exchanges
+      [/naranja-x|naranjax/, "naranja-x"],
+      [/cuenta-dni|dni/, "cuenta-dni"],
+      [/mercado(-)?pago/, "mercadopago"],
+      [/personal(-)?pay/, "ppay"],
+      [/lemon(cash)?/, "lemon"],
+      [/letsbit|lb-finanzas|lbfinanzas/, "letsbit"],
+      [/plus(-)?crypto|plus(-)?inversiones|plus$/, "plus-crypto"],
+      [/buenbit/, "buenbit"],
+      [/fiwind/, "fiwind"],
+      [/prex/, "prex"],
+      [/ripio/, "ripio"],
+      [/satoshi(-)?tango/, "satoshitango"],
+      [/openbank/, "openbank"],
+      [/astropay/, "astropay"],
+    ];
+
+    for (const [rx, key] of aliasRules) {
+      if (rx.test(base) && iconMap[key]) return iconMap[key];
+    }
+
+    // Progressive fallbacks
+    const candidates = [
+      base,
+      base.replace(/^banco-/, ""),
+      base.replace(/-sociedad-anonima$|-s-a-u?$|-sa$|-sac$|-saic$/g, ""),
+    ];
+    for (const c of candidates) {
+      if (iconMap[c]) return iconMap[c];
+      if (iconMap[`banco-${c}`]) return iconMap[`banco-${c}`];
+    }
+
+    if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
+      console.warn("[Logo] No se encontró icono para:", rawName, "→ slug:", base);
+    }
+    return "/placeholder-logo.svg";
+  };
+
   const iconMap: Record<string, string> = {
     'astropay': '/icons/astropay.svg',
+    'balanz': '/icons/balanz.svg',
+    'banco-bbva': '/icons/banco-bbva.svg',
+    'banco-bica': '/icons/banco-bica.svg',
+    'banco-ciudad': '/icons/banco-ciudad.svg',
+    'banco-coinag': '/icons/banco-coinag.svg',
+    'banco-columbia': '/icons/banco-columbia.svg',
+    'banco-comafi': '/icons/banco-comafi.svg',
+    'banco-corrientes': '/icons/banco-corrientes.svg',
+    'banco-credicoop': '/icons/banco-credicoop.svg',
+    'banco-del-sol': '/icons/banco-del-sol.svg',
+    'banco-entre-rios': '/icons/banco-entre-rios.svg',
+    'banco-galicia': '/icons/banco-galicia.svg',
+    'banco-hipotecario': '/icons/banco-hipotecario.svg',
+    'banco-hsbc': '/icons/banco-hsbc.svg',
+    'banco-icbc': '/icons/banco-icbc.svg',
+    'banco-itau': '/icons/banco-itau.svg',
+    'banco-macro': '/icons/banco-macro.svg',
+    'banco-municipal': '/icons/banco-municipal.svg',
+    'banco-nacion': '/icons/banco-nacion.svg',
+    'banco-patagonia': '/icons/banco-patagonia.svg',
+    'banco-piano': '/icons/banco-piano.svg',
+    'banco-provincia': '/icons/banco-provincia.svg',
+    'banco-san-juan': '/icons/banco-san-juan.svg',
+    'banco-santa-cruz': '/icons/banco-santa-cruz.svg',
+    'banco-santa-fe': '/icons/banco-santa-fe.svg',
+    'banco-santander': '/icons/banco-santander.svg',
+    'banco-supervielle': '/icons/banco-supervielle.svg',
+    'bancor': '/icons/bancor.svg',
     'belo': '/icons/belo.svg',
+    'binance': '/icons/binance.svg',
+    'bpn': '/icons/bpn.svg',
     'brubank': '/icons/brubank.svg',
     'buenbit': '/icons/buenbit.svg',
     'cabal': '/icons/cabal.svg',
     'claro-pay': '/icons/claro-pay.svg',
-    'cocos': '/icons/cocos-crypto.svg',
+    'cocos': '/icons/cocos.svg',
+    'cocos-crypto': '/icons/cocos-crypto.svg',
     'cuenta-dni': '/icons/cuenta-dni.svg',
+    'decrypto': '/icons/decrypto.svg',
     'dolar-app': '/icons/dolar-app.svg',
     'fiwind': '/icons/fiwind.svg',
     'lemon': '/icons/lemon.svg',
-    'lemoncash': '/icons/lemon.svg',
-    'lb-finanzas': '/icons/letsbit.svg',
+    'letsbit': '/icons/letsbit.svg',
     'mercadopago': '/icons/mercadopago.svg',
     'modo': '/icons/modo.svg',
-    'naranja': '/icons/naranja-x.svg',
+    'naranja-x': '/icons/naranja-x.svg',
     'openbank': '/icons/openbank.svg',
-    'ppay': '/icons/personal-pay.svg',
+    'personal-pay': '/icons/personal-pay.svg',
     'plus-crypto': '/icons/plus-crypto.svg',
     'prex': '/icons/prex.svg',
     'ripio': '/icons/ripio.svg',
-    'satoshitango': '/icons/satoshi-tango.svg',
-    'supervielle': '/icons/supervielle.svg',
+    'satoshi-tango': '/icons/satoshi-tango.svg',
+    'takenos': '/icons/takenos.svg',
+    'tienda-crypto': '/icons/tienda-crypto.svg',
     'uala': '/icons/uala.svg',
     'wallbit': '/icons/wallbit.svg',
-    'yoy': '/icons/yoy.svg',
-    'banco-bica': '/icons/banco-bica.svg',
-    'banco-ciudad': '/icons/banco-ciudad.svg',
-    'banco-cmf': '/icons/banco-cmf.svg',
-    'banco-credicoop': '/icons/banco-credicoop.svg',
-    'banco-corrientes': '/icons/banco-corrientes.svg',
-    'banco-del-chubut': '/icons/banco-del-chubut.svg',
-    'banco-del-sol': '/icons/banco-del-sol.svg',
-    'banco-dino': '/icons/banco-dino.svg',
-    'banco-julio': '/icons/banco-julio.svg',
-    'banco-mariva': '/icons/banco-mariva.svg',
-    'banco-meridian': '/icons/banco-meridian.svg',
-    'banco-masventas': '/icons/banco-masventas.svg',
-    'banco-comafi': '/icons/banco-comafi.svg',
-    'banco-galicia': '/icons/banco-galicia.svg',
-    'banco-hipotecario': '/icons/banco-hipotecario.svg',
-    'banco-macro': '/icons/banco-macro.svg',
-    'banco-nacion': '/icons/banco-nacion.svg',
-    'banco-nación': '/icons/banco-nacion.svg',
-    'banco-provincia': '/icons/banco-provincia.svg',
-    'banco-santander': '/icons/banco-santander.svg',
-    'banco-provincia-del-neuquen': '/icons/banco-provincia.svg',
-    'letsbit': '/icons/letsbit.svg',
-    'naranja-x': '/icons/naranja-x.svg',
-    'plus': '/icons/plus-crypto.svg',
-    'plus-inversiones': '/icons/plus-crypto.svg',
-    'binance': '/icons/binance.svg',
-    'binace': '/icons/binance.svg',
-    'tienda-crypto': '/icons/tienda-crypto.svg',
-    'decrypto': '/icons/decrypto.svg',
-    'cocos-crypto': '/icons/cocos-crypto.svg',
-    'takenos': '/icons/takenos.svg',
-    'banco-ggal-sa': '/icons/banco-galicia.svg',
-    'lbfinanzas': '/icons/letsbit.svg',
-    'banco-tierra-del-fuego': '/icons/banco-tierra-del-fuego.svg',
-    'banco-voii': '/icons/banco-voii.svg',
-    'banco-woii': '/icons/banco-voii.svg',
-    'bibank': '/icons/bibank.svg',
-    'credito-regional': '/icons/credito-regional.svg',
-    'galicia': '/icons/banco-galicia.svg',
-    'ibc': '/icons/ibc.svg',
-    'macro': '/icons/banco-macro.svg',
-    'reba': '/icons/reba.svg',
-    'banco-de-corrientes': '/icons/banco-corrientes.svg',
-    'banco-de-formosa': '/icons/banco-formosa.svg',
-    'banco-ggal': '/icons/banco-galicia.svg',
-    'bancor': '/icons/bancor.svg',
-    'bbva': '/icons/banco-bbva.svg',
-    'galicia+': '/icons/banco-galicia.svg',
-    'icbc': '/icons/banco-icbc.svg'
+    'yoy': '/icons/yoy.svg'
   };
 
   // Barra de navegación para cambiar de sección
@@ -318,82 +387,62 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {
-                          // Normalización de nombre de entidad para buscar logo
-                          (() => {
-                            const normalize = (s: string) =>
-                                s
-                                    .toLowerCase()
-                                    .normalize("NFD")
-                                    .replace(/[\u0300-\u036f]/g, "")
-                                    .replace(/ /g, "-")
-                                    .replace(/\./g, "")
-                                    .replace(/saic|sa|sac|s\/a/gi, "")
-                                    .replace(/--+/g, "-")
-                                    .trim();
-                            return sortedPlazos.map((p, i) => {
-                              const iconKey = normalize(p.entidad);
-                              const iconSrc = iconMap[iconKey] || '/placeholder-logo.svg';
-                              if (
-                                  process.env.NODE_ENV === "development" &&
-                                  !iconMap[iconKey]
-                              ) {
-                                // eslint-disable-next-line no-console
-                                console.warn("Logo no encontrado para", p.entidad, "iconKey:", iconKey);
-                              }
-                              return p.enlace ? (
-                                  <a
-                                      key={i}
-                                      href={p.enlace}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 flex items-center space-x-4 hover:shadow-md transition no-underline"
-                                  >
-                          <span className="absolute top-3 right-3 bg-blue-100 text-blue-700 text-sm font-medium px-3 py-0.5 rounded-full border border-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700">
-                            {(p.tnaClientes * 100).toFixed(2)}%
-                          </span>
-                                    <img
-                                        src={iconSrc}
-                                        alt={p.entidad}
-                                        onError={(e) => {
-                                          const target = e.target as HTMLImageElement;
-                                          if (!target.dataset.fallback) {
-                                            target.src = '/placeholder-logo.svg';
-                                            target.dataset.fallback = 'true';
-                                          }
-                                        }}
-                                        className="w-12 h-12 object-contain rounded-full bg-white p-1.5 shadow border border-gray-200 dark:border-gray-600"
-                                    />
-                                    <div>
-                                      <h4 className="font-semibold text-gray-800 dark:text-gray-100">{p.entidad}</h4>
-                                    </div>
-                                  </a>
-                              ) : (
-                                  <div
-                                      key={i}
-                                      className="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 flex items-center space-x-4 cursor-default"
-                                  >
-                          <span className="absolute top-3 right-3 bg-blue-100 text-blue-700 text-sm font-medium px-3 py-0.5 rounded-full border border-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700">
-                            {(p.tnaClientes * 100).toFixed(2)}%
-                          </span>
-                                    <img
-                                        src={iconSrc}
-                                        alt={p.entidad}
-                                        onError={(e) => {
-                                          const target = e.target as HTMLImageElement;
-                                          if (!target.dataset.fallback) {
-                                            target.src = '/placeholder-logo.svg';
-                                            target.dataset.fallback = 'true';
-                                          }
-                                        }}
-                                        className="w-12 h-12 object-contain rounded-full bg-white p-1.5 shadow border border-gray-200 dark:border-gray-600"
-                                    />
-                                    <div>
-                                      <h4 className="font-semibold text-gray-800 dark:text-gray-100">{p.entidad}</h4>
-                                    </div>
+                          // Usar resolveIcon para buscar logo
+                          sortedPlazos.map((p, i) => {
+                            const iconSrc = resolveIcon(p.entidad);
+                            return p.enlace ? (
+                                <a
+                                    key={i}
+                                    href={p.enlace}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 flex items-center space-x-4 hover:shadow-md transition no-underline"
+                                >
+                        <span className="absolute top-3 right-3 bg-blue-100 text-blue-700 text-sm font-medium px-3 py-0.5 rounded-full border border-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700">
+                          {(p.tnaClientes * 100).toFixed(2)}%
+                        </span>
+                                  <img
+                                      src={iconSrc}
+                                      alt={p.entidad}
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        if (!target.dataset.fallback) {
+                                          target.src = '/placeholder-logo.svg';
+                                          target.dataset.fallback = 'true';
+                                        }
+                                      }}
+                                      className="w-12 h-12 object-contain rounded-full bg-white p-1.5 shadow border border-gray-200 dark:border-gray-600"
+                                  />
+                                  <div>
+                                    <h4 className="font-semibold text-gray-800 dark:text-gray-100">{p.entidad}</h4>
                                   </div>
-                              );
-                            });
-                          })()
+                                </a>
+                            ) : (
+                                <div
+                                    key={i}
+                                    className="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 flex items-center space-x-4 cursor-default"
+                                >
+                        <span className="absolute top-3 right-3 bg-blue-100 text-blue-700 text-sm font-medium px-3 py-0.5 rounded-full border border-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700">
+                          {(p.tnaClientes * 100).toFixed(2)}%
+                        </span>
+                                  <img
+                                      src={iconSrc}
+                                      alt={p.entidad}
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        if (!target.dataset.fallback) {
+                                          target.src = '/placeholder-logo.svg';
+                                          target.dataset.fallback = 'true';
+                                        }
+                                      }}
+                                      className="w-12 h-12 object-contain rounded-full bg-white p-1.5 shadow border border-gray-200 dark:border-gray-600"
+                                  />
+                                  <div>
+                                    <h4 className="font-semibold text-gray-800 dark:text-gray-100">{p.entidad}</h4>
+                                  </div>
+                                </div>
+                            );
+                          })
                         }
                       </div>
                     </section>
@@ -415,8 +464,7 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {sortedBilleteras.map((b, i) => {
-                          const lowerNombre = b.nombre.toLowerCase();
-                          const iconSrc = iconMap[lowerNombre] || '/placeholder-logo.svg';
+                          const iconSrc = resolveIcon(b.nombre);
                           return b.url ? (
                               <a
                                   key={i}
@@ -510,8 +558,7 @@ const YieldAnalysis: React.FC<Props> = ({ activeSection }) => {
                           <tr className="text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 uppercase text-center tracking-wide">
                             <th className="px-4 py-3 text-gray-800 dark:text-gray-100">Criptomoneda</th>
                             {sortedCripto.map((entidad, idx) => {
-                              const lowerEntidad = entidad.entidad.toLowerCase();
-                              const iconSrc = iconMap[lowerEntidad] || entidad.logo || '/placeholder-logo.svg';
+                              const iconSrc = resolveIcon(entidad.entidad) || entidad.logo || '/placeholder-logo.svg';
                               return (
                                   <th key={idx} className="px-4 py-3 text-center text-gray-800 dark:text-gray-100">
                                     {entidad.url ? (
