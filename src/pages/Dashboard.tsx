@@ -63,7 +63,7 @@ const cryptoEmoji: Record<string, string> = {
   USDC: '🔵',
   BTC: '🟠',
   ETH: '🟣',
-  Inflación: '📊',
+  Inflación: '🇦🇷',
 };
 
 const Dashboard: React.FC = () => {
@@ -856,9 +856,9 @@ const Dashboard: React.FC = () => {
                           </div>
                       ))}
                   {/* Mostrar inflación mensual */}
-                  <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 space-y-2 border-l-4 border-orange-400 text-center">
+                  <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 space-y-2 border-l-4 border-blue-400 text-center">
                     <h3 className="text-sm font-medium text-gray-800 dark:text-gray-100">
-                      {cryptoEmoji['Inflación']} Inflación mensual
+                      {cryptoEmoji['Inflación']} Inflación Mensual
                     </h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Fuente: INDEC</p>
                     {inflationError ? (
