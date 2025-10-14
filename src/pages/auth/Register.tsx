@@ -176,7 +176,7 @@ const Register: React.FC = () => {
                           {passwordValidation.length ? <Check size={12} /> : '•'}
                         </span>
                             <span className={passwordValidation.length ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-600'}>
-                          Mínimo 6 caracteres
+                          Mínimo 8c caracteres
                         </span>
                           </div>
                           <div className="flex items-center">

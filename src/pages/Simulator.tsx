@@ -126,21 +126,23 @@ const Simulator: React.FC = () => {
 
     fetchRates();
 
-    // Fetch inflación oficial del INDEC desde datos.gob.ar (último valor mensual disponible)
+    // Fetch inflación oficial (último dato mensual) desde ArgentinaDatos (INDEC)
     const fetchInflation = async () => {
       try {
-        const res = await axios.get(
-            'https://apis.datos.gob.ar/series/api/series/?metadata=full&collapse=month&ids=103.1_I2N_2016_M_19&limit=5000&representation_mode=percent_change&start=0'
-        );
-        if (res.data?.data && Array.isArray(res.data.data)) {
-          const lastRow = res.data.data[res.data.data.length - 1];
-          const lastValue = lastRow[3] ?? lastRow[2] ?? lastRow[1]; // uso del valor más reciente disponible
-          if (typeof lastValue === 'number') {
-            setMonthlyInflation(parseFloat((lastValue * 100).toFixed(2))); // lo multiplicamos por 100 porque la API devuelve proporción
-          }
+        const res = await axios.get('https://api.argentinadatos.com/v1/finanzas/indices/inflacion/');
+        const arr = Array.isArray(res.data) ? res.data : [];
+        if (!arr.length) return;
+        const today = new Date();
+        const latest = arr
+          .map((it: any) => ({ date: new Date(it.fecha), value: it.valor }))
+          .filter((e: { date: Date; value: number | null }): e is { date: Date; value: number } => e.value !== null && e.date <= today)
+          .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+        if (latest) {
+          // ArgentinaDatos ya entrega el porcentaje mensual (ej: 2.8)
+          setMonthlyInflation(parseFloat(latest.value.toFixed(2)));
         }
       } catch (e) {
-        console.error('Error al obtener inflación oficial del INDEC:', e);
+        console.error('Error al obtener inflación desde ArgentinaDatos:', e);
       }
     };
     fetchInflation();
@@ -217,7 +219,7 @@ const Simulator: React.FC = () => {
     const installment = totalInstallment / count;
     // Inflación estimada
     if (monthlyInflation === null || isNaN(monthlyInflation)) {
-      setError('No se pudo obtener la inflación esperada del BCRA. Intentá más tarde.');
+      setError('No se pudo obtener la inflación mensual estimada. Podés ingresarla manualmente.');
       return;
     }
     const inflationRate = monthlyInflation;
@@ -524,7 +526,7 @@ const Simulator: React.FC = () => {
                           </p>
                           {monthlyInflation !== null && (
                               <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">
-                                Inflación mensual esperada según BCRA: {monthlyInflation.toFixed(2)}% (~{((Math.pow(1 + (monthlyInflation / 100), 12) - 1) * 100).toFixed(2)}% anual)
+                                Inflación mensual (INDEC, último dato): {monthlyInflation.toFixed(2)}% (~{((Math.pow(1 + (monthlyInflation / 100), 12) - 1) * 100).toFixed(2)}% anual)
                               </p>
                           )}
                         </div>

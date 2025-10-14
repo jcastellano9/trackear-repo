@@ -118,39 +118,35 @@ const Dashboard: React.FC = () => {
   const [lastInflation, setLastInflation] = useState<number | null>(null);
   const [inflationError, setInflationError] = useState(false);
   useEffect(() => {
-    // Obtener datos de inflación desde datos.gob.ar y actualizar estado
+    // Obtener datos de inflación desde ArgentinaDatos y actualizar estado
     const fetchInflationData = async () => {
       try {
-        const response = await fetch('https://apis.datos.gob.ar/series/api/series/?metadata=full&collapse=month&ids=103.1_I2N_2016_M_19&limit=5000&representation_mode=percent_change&start=0');
-        const json = await response.json();
-        const rawData = json.data;
-        if (rawData && rawData.length > 0) {
-          const today = new Date();
-          const recentEntry = rawData
-              .map((entry: [string, number | null]): { date: Date; value: number | null } => ({
-                date: new Date(entry[0]),
-                value: entry[1]
-              }))
-              .filter(
-                  (entry: { date: Date; value: number | null }): entry is { date: Date; value: number } =>
-                      entry.date <= today && entry.value !== null
-              )
-              .sort(
-                  (a: { date: Date; value: number }, b: { date: Date; value: number }) =>
-                      b.date.getTime() - a.date.getTime()
-              )[0];
-          if (recentEntry) {
-            setLastInflation(recentEntry.value! * 100);
-          } else {
-            console.warn("No hay datos de inflación recientes.");
-            setInflationError(true);
-          }
+        // Fuente: ArgentinaDatos (INDEC) – devuelve [{ fecha: 'YYYY-MM-31', valor: number }]
+        const resp = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const arr: Array<{ fecha: string; valor: number | null }> = await resp.json();
+
+        if (!Array.isArray(arr) || arr.length === 0) {
+          console.warn('No se recibieron datos de inflación.');
+          setInflationError(true);
+          return;
+        }
+
+        const today = new Date();
+        const recentEntry = arr
+          .map((item) => ({ date: new Date(item.fecha), value: item.valor }))
+          .filter((e): e is { date: Date; value: number } => e.value !== null && e.date <= today)
+          .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+
+        if (recentEntry) {
+          setLastInflation(recentEntry.value);
+          setInflationError(false);
         } else {
-          console.warn("No se recibieron datos de inflación.");
+          console.warn('No hay datos de inflación recientes.');
           setInflationError(true);
         }
       } catch (error) {
-        console.error('Error al obtener inflación desde datos.gob.ar:', error);
+        console.error('Error al obtener inflación desde ArgentinaDatos:', error);
         setInflationError(true);
       }
     };
