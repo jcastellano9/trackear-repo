@@ -65,8 +65,6 @@ const Simulator: React.FC = () => {
     suggestion: 'Cuotas' | 'Contado';
     adjustedInstallments: number[];
     inflationRate: number;
-    fciProjection: number;
-    pfProjection: number;
   }
   const [installmentResult, setInstallmentResult] = useState<InstallmentResult | null>(null);
   const [monthlyInflation, setMonthlyInflation] = useState<number | null>(null);
@@ -233,34 +231,18 @@ const Simulator: React.FC = () => {
     // Costo total financiado = suma de cuotas ajustadas
     const totalFinanced = totalAdjusted;
 
-    // Promedio billetera virtual/FCI
-    const avgWalletRate = walletRates.length
-        ? walletRates.reduce((sum, r) => sum + r.rate, 0) / walletRates.length
-        : 30;
-    const avgBankRate = bankRates.length
-        ? bankRates.reduce((sum, r) => sum + r.rate, 0) / bankRates.length
-        : 35;
-
-    // Simulación inversión alternativa
-    // Proyección FCI usando TNA compuesta mensualmente
-    const fciProjection = cash * Math.pow(1 + avgWalletRate / 100 / 12, count);
-    // Proyección Plazo Fijo usando TNA compuesta mensualmente
-    const pfProjection = cash * Math.pow(1 + avgBankRate / 100 / 12, count);
-
     // CFT del plan (sobre el período completo): independiente de la cantidad de cuotas
     // Si total en cuotas duplica al contado, cftPlan = 100% tanto en 6 como en 12 cuotas.
     const cftPlan = ((totalInstallment / cash) - 1) * 100;
 
-    const suggestion = totalAdjusted < cash * 1.05 ? 'Cuotas' : 'Contado';
+    const suggestion = Math.round(totalAdjusted) <= Math.round(cash) ? 'Cuotas' : 'Contado';
 
     setInstallmentResult({
       totalFinanced,
       cftPlan,
       suggestion,
       adjustedInstallments,
-      inflationRate,
-      fciProjection,
-      pfProjection
+      inflationRate
     });
     setError(null);
   };
@@ -510,12 +492,16 @@ const Simulator: React.FC = () => {
                       <Calculator size={18} className="mr-2" />
                       Comparar
                     </button>
+                  </div>
+                  <div className="space-y-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-md h-full">
+                    {error && (
+                        <div className="p-3 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg flex items-center text-red-700 dark:text-red-300">
+                          <AlertCircle size={18} className="mr-2 flex-shrink-0" />
+                          <span>{error}</span>
+                        </div>
+                    )}
                     {installmentResult && (
-                        <div className={`mt-6 p-5 rounded-xl text-base text-left font-semibold ${
-                            installmentResult.suggestion === 'Cuotas'
-                                ? 'bg-green-100 text-green-700 border border-green-300 dark:bg-green-900/20 dark:text-green-300 dark:border-green-600'
-                                : 'bg-red-100 text-red-700 border border-red-300 dark:bg-red-900/20 dark:text-red-300 dark:border-red-600'
-                        }`}>
+                        <div className={`mb-4 p-5 rounded-xl text-base text-left font-semibold bg-yellow-100 text-yellow-800 border border-yellow-300 dark:bg-yellow-900/20 dark:text-yellow-200 dark:border-yellow-600`}>
                           <p className="text-xl font-extrabold mb-1 tracking-tight">
                             Recomendación: {installmentResult.suggestion === 'Cuotas' ? '💳 Cuotas' : '💵 Contado'}
                           </p>
@@ -524,19 +510,6 @@ const Simulator: React.FC = () => {
                                 ? 'La suma de las cuotas ajustadas por inflación es menor al valor de contado.'
                                 : 'El valor actualizado de las cuotas es mayor al precio de contado considerando la inflación estimada.'}
                           </p>
-                          {monthlyInflation !== null && (
-                              <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">
-                                Inflación mensual (INDEC, último dato): {monthlyInflation.toFixed(2)}% (~{((Math.pow(1 + (monthlyInflation / 100), 12) - 1) * 100).toFixed(2)}% anual)
-                              </p>
-                          )}
-                        </div>
-                    )}
-                  </div>
-                  <div className="space-y-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-md h-full">
-                    {error && (
-                        <div className="p-3 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg flex items-center text-red-700 dark:text-red-300">
-                          <AlertCircle size={18} className="mr-2 flex-shrink-0" />
-                          <span>{error}</span>
                         </div>
                     )}
                     {installmentResult && (
@@ -574,10 +547,6 @@ const Simulator: React.FC = () => {
                                 {installmentResult.cftPlan.toFixed(2)}%
                               </span>
                             </div>
-                            {/* Explicación CFT */}
-                            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                              El CFT del plan refleja el costo total del financiamiento respecto del precio de contado en todo el período de cuotas (no se anualiza).
-                            </div>
                             {/* Inflación mensual estimada */}
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-gray-600 dark:text-gray-300">Inflación mensual estimada:</span>
@@ -585,27 +554,6 @@ const Simulator: React.FC = () => {
                                 {installmentResult.inflationRate.toFixed(2)}%
                               </span>
                             </div>
-                          </div>
-                          {/* Simulación alternativa */}
-                          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="p-4 bg-blue-50 dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-xl shadow-sm">
-                              <p className="text-gray-700 dark:text-gray-200 font-medium mb-1">FCI (billetera promedio):</p>
-                              <p className="text-blue-600 font-bold text-lg">{formatCurrency(installmentResult.fciProjection)}</p>
-                              <p className="text-xs text-blue-600 mt-1">TNA estimada: {walletRates.length
-                                  ? (walletRates.reduce((sum, r) => sum + r.rate, 0) / walletRates.length).toFixed(2)
-                                  : '30.00'}%</p>
-                            </div>
-                            <div className="p-4 bg-green-50 dark:bg-gray-800 border border-green-200 dark:border-green-700 rounded-xl shadow-sm">
-                              <p className="text-gray-700 dark:text-gray-200 font-medium mb-1">Plazo Fijo promedio:</p>
-                              <p className="text-green-600 font-bold text-lg">{formatCurrency(installmentResult.pfProjection)}</p>
-                              <p className="text-xs text-green-600 mt-1">TNA estimada: {bankRates.length
-                                  ? (bankRates.reduce((sum, r) => sum + r.rate, 0) / bankRates.length).toFixed(2)
-                                  : '35.00'}%</p>
-                            </div>
-                          </div>
-                          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                            <p><strong>¿Qué es FCI?</strong> Fondo Común de Inversión, como las cuentas remuneradas (ej: MercadoPago), donde el dinero genera intereses diarios y se puede retirar en cualquier momento.</p>
-                            <p className="mt-2"><strong>¿Qué es un Plazo Fijo?</strong> Es una inversión bancaria en la que el dinero queda inmovilizado por un período (ej: 30 días), y se cobra el interés al final del plazo.</p>
                           </div>
                         </>
                     )}
