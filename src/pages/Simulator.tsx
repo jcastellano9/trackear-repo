@@ -24,9 +24,6 @@ interface SimulationResult {
 // Simulator: Componente para simular inversiones y comparar cuotas vs contado
 const Simulator: React.FC = () => {
 
-    // useState: Estados para tipo de simulación, formularios, datos y resultados
-
-
     // Estado tipo de simulación
     const [simulationType, setSimulationType] = useState<'fixed' | 'wallet' | 'crypto' | 'installments'>('fixed');
 
@@ -73,14 +70,12 @@ const Simulator: React.FC = () => {
 
     // Obtener tasas al montar el componente (integración real)
     useEffect(() => {
-        // Refactor: obtener billeteras virtuales primero, luego FCI en paralelo y actualizarlas en caliente
         const fetchRates = async () => {
             try {
                 // Plazo fijo (ArgentinaDatos)
                 const fixedRes = await axios.get('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo/');
                 const fixedData = (Array.isArray(fixedRes.data) ? fixedRes.data : []).map((item: any) => ({
                     entity: item.entidad || item.banco || item.nombre || 'Entidad',
-                    // La API a veces trae fracción (0.35) u % (35): normalizamos a %
                     rate: typeof item.tnaClientes === 'number' ? (item.tnaClientes <= 1 ? item.tnaClientes * 100 : item.tnaClientes)
                         : typeof item.tna === 'number' ? (item.tna <= 1 ? item.tna * 100 : item.tna)
                             : 0,
@@ -141,7 +136,6 @@ const Simulator: React.FC = () => {
                     } => e.value !== null && e.date <= today)
                     .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
                 if (latest) {
-                    // ArgentinaDatos ya entrega el porcentaje mensual (ej: 2.8)
                     setMonthlyInflation(parseFloat(latest.value.toFixed(2)));
                 }
             } catch (e) {
@@ -151,14 +145,11 @@ const Simulator: React.FC = () => {
         fetchInflation();
     }, []);
 
-    // handleEntitySelect: Guarda entidad y tasa seleccionada para cálculos
-    // Manejar selección de entidad
     const handleEntitySelect = (entity: string, rate: number) => {
         setSelectedEntity(entity);
         setRate(rate.toString());
     };
 
-    // calculateResults: Calcula monto final, interés y TEA según tipo de simulación
     // Calcular resultados de simulación
     const calculateResults = () => {
         if (!amount || !rate || !term) {
@@ -198,7 +189,6 @@ const Simulator: React.FC = () => {
     };
 
     // formatCurrency: Formatea número como moneda ARS sin decimales
-    // Formatear moneda
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('es-AR', {
             style: 'currency',
@@ -208,7 +198,6 @@ const Simulator: React.FC = () => {
     };
 
     // calculateInstallmentComparison: Compara cuotas vs contado ajustado por inflación y calcula CFT, proyecciones FCI y PF
-    // Cálculo de Cuotas vs Contado
     const calculateInstallmentComparison = () => {
         const cash = parseFloat(cashPrice);
         const totalInstallment = parseFloat(installmentAmount);
@@ -233,11 +222,8 @@ const Simulator: React.FC = () => {
             adjustedInstallments.push(adjusted);
             totalAdjusted += adjusted;
         }
-        // Costo total financiado = suma de cuotas ajustadas
         const totalFinanced = totalAdjusted;
 
-        // CFT del plan (sobre el período completo): independiente de la cantidad de cuotas
-        // Si total en cuotas duplica al contado, cftPlan = 100% tanto en 6 como en 12 cuotas.
         const cftPlan = ((totalInstallment / cash) - 1) * 100;
 
         const suggestion = Math.round(totalAdjusted) <= Math.round(cash) ? 'Cuotas' : 'Contado';

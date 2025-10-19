@@ -155,7 +155,6 @@ const Dashboard: React.FC = () => {
 
   // Recalcular distribución del portafolio por tipo usando valores actuales filtrados
   const distributionData = React.useMemo(() => {
-    // Etiquetas para gráfico de dona
     const labels = ['Criptomonedas', 'CEDEARs', 'Acciones'] as string[];
 
     // Obtener valor actual por cada tipo de activo
@@ -257,7 +256,6 @@ const Dashboard: React.FC = () => {
       Acción: { bg: 'rgba(14, 165, 233, 0.2)', border: '#0EA5E9' },
     };
 
-    // Construir datasets filtrando por typeFilter
     let datasets;
     if (typeFilter === 'Todos') {
       datasets = [
@@ -423,9 +421,7 @@ const Dashboard: React.FC = () => {
     }
   } as ChartOptions<'line'>;
 
-  // PARCHADO getCapitalEvolutionData para usar "Acción" de forma consistente
-  // (Si se mueve esta función, mantener este parche)
-  // Opciones para gráfico de dona (distribución de portafolio)
+
   const doughnutOptions = {
     responsive: true,
     plugins: {
@@ -479,12 +475,6 @@ const Dashboard: React.FC = () => {
           <p className="text-gray-600 dark:text-gray-300">Bienvenido a tu panel financiero</p>
         </motion.div>
 
-        {/*
-        Indicadores principales
-        Mostrar total invertido, valor actual, ganancia/pérdida y rendimiento
-        usando exclusivamente valores de resumenGlobal del hook.
-        Botón ARS/USD cambia solo el formato visual, no la lógica ni el origen.
-      */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Invertido */}
           <motion.div

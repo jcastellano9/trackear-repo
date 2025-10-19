@@ -8,6 +8,7 @@ import {KeyRound, AlertCircle, CheckCircle2} from 'lucide-react';
 
 const ResetPassword: React.FC = () => {
     const {resetPassword} = useAuth();
+
     // Estados del formulario
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
