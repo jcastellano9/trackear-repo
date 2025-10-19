@@ -202,7 +202,7 @@ const Analysis: React.FC = () => {
             ? dolarApiRes.data
                 .map((q: any) => {
                   // Formato explícito para el nombre
-                  let usdName = '';
+                  let usdName: string;
                   if (q.nombre.toLowerCase() === 'oficial') {
                     usdName = 'USD Oficial';
                   } else if (q.nombre.toLowerCase() === 'contado con liquidación') {
@@ -1013,7 +1013,8 @@ const Analysis: React.FC = () => {
                                 const mepQuote = pixQuotes.find(q =>
                                   q.name.toLowerCase().includes('real-tarjeta-mep') && q.name.toLowerCase().includes('paga con ars')
                                 );
-                                const filteredBySymbol = pixQuotes.filter(q =>
+                                // @ts-ignore
+                                  const filteredBySymbol = pixQuotes.filter(q =>
                                     selectedPixSymbol ? q.name.toLowerCase().includes(`paga con ${selectedPixSymbol.toLowerCase()}`) : true
                                 );
                                 const bestQuote = selectedPixSymbol === 'ARS' ? bestArsPixQuote : bestPixQuote;
