@@ -181,7 +181,7 @@ const Analysis: React.FC = () => {
                 setLoading(true);
                 const [dolarApiRes, comparaRes] = await Promise.all([
                     axios.get('https://dolarapi.com/v1/dolares'),
-                    axios.get('https://api.comparadolar.ar/quotes')
+                    axios.get('https://api2.comparadolar.ar/quotes')
                 ]);
 
                 const getUSDOrder = (name: string) => {
