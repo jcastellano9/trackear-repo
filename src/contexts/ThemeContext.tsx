@@ -1,8 +1,5 @@
 /**
  * Contexto global para gestión de tema (claro/oscuro).
- * - Lee preferencia guardada en localStorage o configuraciones del sistema.
- * - Permite alternar entre modos con `toggleTheme`.
- * - Sincroniza automáticamente con cambios del sistema operativo.
  */
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -36,7 +33,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Actualiza el estado si el sistema cambia entre claro/oscuro
   useEffect(() => {
-    // Update theme when system preference changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
       setIsDark(e.matches);
@@ -49,7 +45,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Aplica el tema al DOM y lo guarda en localStorage
   useEffect(() => {
-    // Update document class and localStorage when theme changes
     if (isDark) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');

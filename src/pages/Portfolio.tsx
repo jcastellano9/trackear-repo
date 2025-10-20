@@ -37,7 +37,6 @@ const AssetLogo: React.FC<{
 }> = ({ticker, type, getLogoUrl}) => {
     const [failed, setFailed] = React.useState(false);
 
-    // Preferimos la URL local/propia si existe, y dejamos que onError active el fallback visual.
     const src = getLogoUrl ? getLogoUrl(ticker, type) : '';
 
     if (failed || !src) {
@@ -640,7 +639,6 @@ const Portfolio: React.FC = () => {
                                     className="max-w-xs w-full h-9 pl-10 pr-4 text-sm py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
-                            {/* Sorting dropdown removed, replaced by sortable table headers */}
                         </div>
                     </div>
 

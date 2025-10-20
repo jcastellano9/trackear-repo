@@ -6,12 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="5a57cfc4-1995-429b-a991-73bddbccd1fc" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/Analysis.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Analysis.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/Dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Dashboard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/contexts/ThemeContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/contexts/ThemeContext.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/pages/Portfolio.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Portfolio.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/pages/Profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Profile.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/Simulator.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Simulator.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/auth/ResetPassword.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/auth/ResetPassword.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -156,7 +154,7 @@
       <workItem from="1760449613822" duration="2949000" />
       <workItem from="1760453182287" duration="930000" />
       <workItem from="1760454185818" duration="1808000" />
-      <workItem from="1760889757231" duration="2584000" />
+      <workItem from="1760889757231" duration="3956000" />
     </task>
     <servers />
   </component>

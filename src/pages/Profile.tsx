@@ -27,6 +27,7 @@ const Profile: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [loadingChange, setLoadingChange] = useState(false);
+
     // Password visibility and validation states
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
@@ -38,7 +39,6 @@ const Profile: React.FC = () => {
         number: false,
         special: false
     });
-    // Password validation and strength logic
     // validatePassword: Actualiza validación de criterios de seguridad de la nueva contraseña
     const validatePassword = (value: string) => {
         setPasswordValidation({
